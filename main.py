@@ -23,9 +23,8 @@ logging.basicConfig(
 
 # Generate a unique basic 16 key: https://acte.ltd/utils/randomkeygen
 app = Flask(__name__)
-app.secret_key = b"_53oi3uriq9pifpff;apl"
+app.secret_key = b"f53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
-
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -35,7 +34,6 @@ csrf = CSRFProtect(app)
 @app.route("/index.html", methods=["GET"])
 def root():
     return redirect("/", 302)
-
 
 @app.route("/", methods=["POST", "GET"])
 @csp_header(
@@ -58,30 +56,35 @@ def root():
         "frame-src": "'none'",
     }
 )
+
 def index():
     return render_template("/index.html")
-
 
 @app.route("/privacy.html", methods=["GET"])
 def privacy():
     return render_template("/privacy.html")
 
-
-@app.route("/signup.html", methods=["GET"])
+@app.route("/signup.html", methods=["GET", "POST"])
 def signup():
+    if request.method == "GET" and request.args.get("url"):
+        url = request.args.get("url", "")
+        return redirect(url, code=302)
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"] # input validation missing
+        dbHandler.insertUser(username, password)
+        return render_template("/form.html")        
     return render_template("/signup.html")
-
 
 # example CSRF protected form
 @app.route("/form.html", methods=["POST", "GET"])
 def form():
     if request.method == "POST":
-        email = request.form["email"]
-        text = request.form["text"]
+        title = request.form["title"]
+        body = request.form["body"] # input validation missing
         return render_template("/form.html")
     else:
         return render_template("/form.html")
-
 
 # Endpoint for logging CSP violations
 @app.route("/csp_report", methods=["POST"])
@@ -89,7 +92,6 @@ def form():
 def csp_report():
     app.logger.critical(request.data.decode())
     return "done"
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

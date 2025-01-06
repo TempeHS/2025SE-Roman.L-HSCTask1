@@ -2,19 +2,19 @@
 
 ## Sprint backlog list of achievables (annotate changes made during sprint, including data required)
 
-- Ability for new team members to self-sign up
+- ~~Ability for new team members to self-sign up~~
 
-- Create SQLite database for accounts
+- ~~Create SQLite database for accounts~~
 
 - Input validation and sanitization
 
 - Password hashing
 
-- HTTP security headers
+- ~~HTTP security headers~~
 
 ## Increment (what must be achieved by the end of the sprint)
 
-- Webpage for team members to sign-up/log-in and brought to form page
+- ~~Webpage for team members to sign-up/log-in and brought to form page~~
 
 - Passwords are hashed in SQLite
 
@@ -22,7 +22,7 @@
 
 - Irregular characters are blocked from input
 
-- Blocks requests from unknown websites
+- ~~Blocks requests from unknown websites~~
 
 ## Sprint Review (Focus on project management)
 

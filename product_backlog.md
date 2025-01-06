@@ -1,6 +1,6 @@
 ## Product Backlog
 
-- Ability for new team members to self-sign up
+- ~~Ability for new team members to self-sign up~~
 
 - Authentication and session management
 
@@ -18,12 +18,12 @@
 
 - Login rate limiting
 
-- HTTP security headers
+- ~~HTTP security headers~~
 
 - Ability to create log entries
 
 - Ability to login
 
-- Create SQLite database for accounts
+- ~~Create SQLite database for accounts~~
 
 - Ability for account deletion
