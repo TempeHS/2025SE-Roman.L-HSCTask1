@@ -6,15 +6,19 @@
 
 - ~~Create SQLite database for accounts~~
 
-- Input validation and sanitization
+- ~~Input validation and sanitization~~
 
-- Password hashing
+- ~~Password hashing~~
 
 - ~~HTTP security headers~~
 
+- Ability for team members to log-in
+
+- Ability to post log entries
+
 ## Increment (what must be achieved by the end of the sprint)
 
-- ~~Webpage for team members to sign-up/log-in and brought to form page~~
+- Webpage for team members to sign-up/log-in and brought to form page
 
 - Passwords are hashed in SQLite
 
@@ -22,7 +26,7 @@
 
 - Irregular characters are blocked from input
 
-- ~~Blocks requests from unknown websites~~
+- Blocks requests from unknown websites
 
 ## Sprint Review (Focus on project management)
 

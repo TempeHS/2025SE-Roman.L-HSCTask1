@@ -12,18 +12,22 @@
 
 - API data sharing and 2FA authentication
 
-- Password hashing
+- ~~Password hashing~~
 
-- Input validation and sanitization
+- ~~Input validation and sanitization~~
 
 - Login rate limiting
 
 - ~~HTTP security headers~~
 
-- Ability to create log entries
+- Ability for team members to log-in
 
-- Ability to login
+- Ability to post log entries
 
 - ~~Create SQLite database for accounts~~
 
 - Ability for account deletion
+
+- SSL encryption
+
+- style.css

@@ -1,17 +1,17 @@
+import logging
+import requests
 from flask import Flask
 from flask import redirect
 from flask import render_template
 from flask import request
 from flask import jsonify
-import requests
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
-import logging
+
+from src import sanitize_and_validate as sv
 
 import userManagement as dbHandler
 
-# Code snippet for logging a message
-# app.logger.critical("message")
 
 app_log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -26,6 +26,7 @@ app = Flask(__name__)
 app.secret_key = b"f53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
 
+
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
 @app.route("/index.htm", methods=["GET"])
@@ -34,6 +35,7 @@ csrf = CSRFProtect(app)
 @app.route("/index.html", methods=["GET"])
 def root():
     return redirect("/", 302)
+
 
 @app.route("/", methods=["POST", "GET"])
 @csp_header(
@@ -57,12 +59,15 @@ def root():
     }
 )
 
+
 def index():
     return render_template("/index.html")
+
 
 @app.route("/privacy.html", methods=["GET"])
 def privacy():
     return render_template("/privacy.html")
+
 
 @app.route("/signup.html", methods=["GET", "POST"])
 def signup():
@@ -71,20 +76,28 @@ def signup():
         return redirect(url, code=302)
     if request.method == "POST":
         username = request.form["username"]
-        password = request.form["password"] # input validation missing
+        password = request.form["password"]
+
+        if dbHandler.userExists(username) or not sv.validateCredentials(username, password):
+            return jsonify({
+                "status": "error",
+                "message": "Invalid credentials or user already exists"
+            })
+
         dbHandler.insertUser(username, password)
-        return render_template("/form.html")        
+        return render_template("/index.html")
     return render_template("/signup.html")
 
-# example CSRF protected form
-@app.route("/form.html", methods=["POST", "GET"])
+
+@app.route("/form.html", methods=["GET", "POST"])
 def form():
     if request.method == "POST":
         title = request.form["title"]
-        body = request.form["body"] # input validation missing
+        text = request.form["text"]
         return render_template("/form.html")
     else:
         return render_template("/form.html")
+
 
 # Endpoint for logging CSP violations
 @app.route("/csp_report", methods=["POST"])
@@ -92,6 +105,7 @@ def form():
 def csp_report():
     app.logger.critical(request.data.decode())
     return "done"
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
