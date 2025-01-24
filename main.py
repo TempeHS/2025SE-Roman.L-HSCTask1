@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import logging
 import requests
 from flask import Flask, redirect, render_template, request, session, jsonify
+from urllib.parse import urlparse
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh
@@ -85,8 +86,11 @@ def signup():
     Signup page for new users
     '''
     if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
+        url = request.args.get("url", "").replace('\\', '/')
+        parsed_url = urlparse(url)
+        if not parsed_url.scheme and not parsed_url.netloc:
+            return redirect(url, code=302)
+        return redirect('/', code=302)
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
