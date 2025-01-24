@@ -2,23 +2,23 @@
 {% block content %}
 <div class="container">
   <div class="row">
-    <h1>Sample Secure Form</h1>
+    <h1>Create Developer Log</h1>
   </div>
 </div>
 <div class="container">
   <div class="row">
     <form action="/form.html" method="POST" class="box">
       <div class="col-auto">
-        <label name="exampleFormControlInput1" class="form-label">Email address</label>
-        <input name="title" type="email" class="form-control" id="exampleFormControlInput1" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2, 4}$" placeholder="name@example.com">
+        <label name="exampleFormControlInput1" class="form-label">Title</label>
+        <input name="title" type="text" class="form-control" id="titleInput" placeholder="Log Title" requried>
       </div>
       <div class="col-auto">
-        <label for="exampleFormControlTextarea1" class="form-label">Example text area</label>
-        <textarea class="form-control" name="text" id="exampleFormControlTextarea1" rows="3"></textarea>
+        <label for="exampleFormControlTextarea1" class="form-label">Log Content</label>
+        <textarea class="form-control" name="body" id="bodyText" rows="5" required></textarea>
       </div>
       <br/>
       <div class="col-auto">
-        <button type="submit" class="btn btn-primary mb-3">Submit</button>
+        <button type="submit" class="btn btn-primary mb-3">Create Log</button>
       </div>
       <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" />
     </form>

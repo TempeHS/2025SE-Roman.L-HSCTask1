@@ -16,13 +16,13 @@
 
 - ~~Input validation and sanitization~~
 
-- Login rate limiting
+- Log all failed login attempts and implement a failed login policy (Login rate limiting)
 
 - ~~HTTP security headers~~
 
-- Ability for team members to log-in
+- ~~Ability for team members to log-in~~
 
-- Ability to post log entries
+- ~~Ability to post log entries~~
 
 - ~~Create SQLite database for accounts~~
 
@@ -31,3 +31,14 @@
 - SSL encryption
 
 - style.css
+
+- Tags for search
+
+- Limit to how many logs can appear on one page
+
+- Special formatting for proramming languages
+
+- Automatic deletion for accounts inactive for 6+ months
+
+- Randomise operations and data access patterns for all cryptography processes
+
