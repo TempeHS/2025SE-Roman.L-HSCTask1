@@ -1,8 +1,9 @@
+import ssl
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 import logging
 import requests
-from flask import Flask, redirect, render_template, request, session, jsonify
-from urllib.parse import urlparse
+from flask import Flask, redirect, render_template, request, session, url_for, jsonify
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh
@@ -144,7 +145,7 @@ def form():
         username = session['username']
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         dbHandler.insertDevlog(title, body, username, current_date)
-        return render_template("/dashboard.html")
+        return redirect(url_for('dashboard'))
     return render_template("/form.html")
 
 
@@ -162,7 +163,7 @@ def dashboard():
 @sst.login_required
 def logout():
     '''
-    Logout for logged out
+    Logout for logged in
     '''
     session.clear()
     return redirect('/index.html')
@@ -176,5 +177,8 @@ def csp_report():
     return "done"
 
 
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=443)
