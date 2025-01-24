@@ -4,7 +4,7 @@
 
 - Authentication and session management
 
-- Developer log entries are time/date stamped
+- ~~Developer log entries are time/date stamped~~
 
 - Application meets minimum WC3 PWA standards
 
@@ -41,4 +41,6 @@
 - Automatic deletion for accounts inactive for 6+ months
 
 - Randomise operations and data access patterns for all cryptography processes
+
+- Delete developer logs
 
