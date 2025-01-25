@@ -20,6 +20,48 @@ body {
   padding: 1rem 0;
 }
 
-.row {
+/* Login and signup page */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.login-card {
+  width: 400px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 2rem;
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Developer logs */
+.log-card {
+  margin-bottom: 1rem;
+}
+
+.log-header {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+}
+
+.log-meta {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.log-content {
+  padding: 1rem;
+}
+
+.log-content {
+  white-space: pre-line;
+  padding: 1rem;
 }

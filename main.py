@@ -2,13 +2,14 @@ from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse # URL parsing
 import logging
 import requests
-from flask import Flask, redirect, render_template, request, session, url_for, jsonify
+from flask import Flask, redirect, render_template, request, session, url_for, make_response, jsonify
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
-from flask_limiter import Limiter
+from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
+from markupsafe import Markup # Devlog formatting
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
-import userManagement as dbHandler
+import userManagement as dbHandler # Database functions
 import ssl # SSL context
 
 
@@ -32,14 +33,21 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_HTTPONLY=True
 )
+
+def nl2br(value):
+    return Markup(value.replace('\n', '\n'))
+
+app.jinja_env.filters['nl2br'] = nl2br
+
 # Default rate limiter
+"""
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
 )
-
+"""
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -57,11 +65,11 @@ def root():
         # Server Side CSP is consistent with meta CSP in layout.html
         "base-uri": "'self'",
         "default-src": "'self'",
-        "style-src": "'self'",
-        "script-src": "'self'",
+        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "script-src": "'self' 'unsafe-inline' 'unsafe-eval'",
         "img-src": "'self' data:",
         "media-src": "'self'",
-        "font-src": "'self'",
+        "font-src": "'self' https://fonts.gstatic.com data: https://fonts.googleapis.com",
         "object-src": "'self'",
         "child-src": "'self'",
         "connect-src": "'self'",
@@ -69,7 +77,7 @@ def root():
         "report-uri": "/csp_report",
         "frame-ancestors": "'none'",
         "form-action": "'self'",
-        "frame-src": "'none'",
+        "frame-src": "'none'"
     }
 )
 
@@ -104,22 +112,24 @@ def signup():
             return redirect(url, code=302)
         return redirect('/', code=302)
     if request.method == "POST":
-        username = request.form["username"]
+        email = request.form["email"]
         password = request.form["password"]
+        firstName = request.form["firstName"]
+        lastName = request.form["lastName"]
 
-        if dbHandler.userExists(username) or not sv.validateCredentials(
-            username, password
+        if dbHandler.userExists(email) or not sv.validateCredentials(
+            password
         ):
             print("User exists or invalid credentials")
             return redirect(url_for('signup'))
 
-        dbHandler.insertUser(username, password)
+        dbHandler.insertUser(email, password, firstName, lastName)
         return render_template("/index.html")
     return render_template("/signup.html")
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-@limiter.limit("5 per day")
+#@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
@@ -131,22 +141,22 @@ def login():
         url = request.args.get("url", "")
         return redirect(url, code=302)
     if request.method == "POST":
-        username = request.form["username"]
+        email = request.form["email"]
         password = request.form["password"]
 
-        user = dbHandler.retrieveUsers(username)
+        user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
             session.permanent = True
             session['user_id'] = user[0]
-            session['username'] = username
+            session['email'] = email
             session['logged_in'] = True
 
-            app_log.info("Successful login: %s", username)
+            app_log.info("Successful login: %s", email)
             logs = dbHandler.listDevlogs()
-            return render_template("/dashboard.html", logs=logs, value=username, state=True)
+            return render_template("/dashboard.html", logs=logs, value=user[0], state=True)
         else:
             app_log.warning("Failed login attempt: %s | %s | %s",
-                            username, request.remote_addr, datetime.now())
+                            email, request.remote_addr, datetime.now())
 
     return redirect(url_for('index'))
 
@@ -160,9 +170,12 @@ def form():
     if request.method == "POST":
         title = request.form["title"]
         body = request.form["body"]
-        username = session['username']
+        user_id = session.get('user_id')
+        user = dbHandler.getUserById(user_id)
+        email = user[1]
+        fullname = f"{user[3]} {user[4]}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        dbHandler.insertDevlog(title, body, username, current_date)
+        dbHandler.insertDevlog(title, body, fullname, email, current_date)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
 

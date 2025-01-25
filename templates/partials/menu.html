@@ -1,3 +1,4 @@
+{% if session.get('logged_in') %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
     <a class="navbar-brand" href="#"> </a>
@@ -23,6 +24,10 @@
           {% endif %}
         </li>
         {% if session.get('logged_in') %}
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/form.html">Create</a>
+        </li>
         <li class="nav-item dropdown">
           <a
             class="nav-link dropdown-toggle"
@@ -41,14 +46,27 @@
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="dropdown-item text-danger">Logout</button>
                 </form>
-                {% endif %}
             </li>
           </ul>
         </li>
+        {% endif %}
         <li class="nav-item">
           <a class="nav-link disabled" aria-disabled="true"></a>
         </li>
       </ul>
+
+      <body data-bs-theme="dark">
+        <div class="form-check form-switch mx-4">
+          <input
+            class="form-check-input p-2"
+            type="checkbox"
+            role="switch"
+            id="flexSwitchCheckChecked"
+            checked
+            onclick="darkMode()"
+          />
+        </div>
+
       <form class="d-flex" role="search">
         <input
           class="form-control me-2"
@@ -61,3 +79,4 @@
     </div>
   </div>
 </nav>
+{% endif %}

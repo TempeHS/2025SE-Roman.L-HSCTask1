@@ -9,15 +9,13 @@
 </div>
 <div class="container">
     {% for log in logs %}
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3>{{ log.title }}</h3>
-                <div class="text-muted">
-                    Posted by {{ log.username }} on {{ log.date }}
-                </div>
+        <div class="log-card card">
+            <div class="log-header" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                <h3>{{ log.title|safe }}</h3>
+                <div class="log-meta">Posted by {{ log.fullname }} on {{ log.date }}</div>
             </div>
-            <div class="card-body">
-                <p>{{ log.body }}</p>
+            <div class="collapse" id="collapse{{ loop.index }}">
+                <div class="log-content">{{ log.body|safe|nl2br }}</div>
             </div>
         </div>
     {% endfor %}
