@@ -16,7 +16,7 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/index.html">Home</a>
+          <a class="nav-link active" aria-current="page" href="/index.html"><img src="{{ url_for('static', filename='icons/home.svg') }}" alt="Create" width="20" height="20"> Home</a>
         </li>
         <li class="nav-item">
           {% if not session.get('logged_in') %}
@@ -26,25 +26,18 @@
         {% if session.get('logged_in') %}
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/form.html">Create</a>
+          <a class="nav-link" href="/form.html"><img src="{{ url_for('static', filename='icons/plus-square.svg') }}" alt="Create" width="20" height="20"> Create</a>
         </li>
         <li class="nav-item dropdown">
-          <a
-            class="nav-link dropdown-toggle"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            Settings
-          </a>
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> 
+            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Create" width="20" height="20"> Settings</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">Two-step verification</a></li>
             <li><a class="dropdown-item" href="#">Delete account</a></li>
             <li><hr class="dropdown-divider" /></li>
                   <form action="/logout" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                    <button type="submit" class="dropdown-item text-danger"><img src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Create" width="20" height="20"> Logout</button>
                 </form>
             </li>
           </ul>
@@ -54,7 +47,6 @@
           <a class="nav-link disabled" aria-disabled="true"></a>
         </li>
       </ul>
-
       <body data-bs-theme="dark">
         <div class="form-check form-switch mx-4">
           <input
@@ -66,14 +58,8 @@
             onclick="darkMode()"
           />
         </div>
-
       <form class="d-flex" role="search">
-        <input
-          class="form-control me-2"
-          type="search"
-          placeholder="Search"
-          aria-label="Search"
-        />
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
     </div>

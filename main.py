@@ -100,7 +100,7 @@ def privacy():
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
-@sst.logout_required
+@sst.logoutRequired
 def signup():
     '''
     Signup page for new users
@@ -130,7 +130,7 @@ def signup():
 
 @app.route("/index.html", methods=["GET", "POST"])
 #@limiter.limit("5 per day")
-@sst.logout_required
+@sst.logoutRequired
 def login():
     '''
     Login page for new users
@@ -162,7 +162,7 @@ def login():
 
 
 @app.route("/form.html", methods=["GET", "POST"])
-@sst.login_required
+@sst.loginRequired
 def form():
     '''
     Form page for posting, login required
@@ -174,14 +174,14 @@ def form():
         user = dbHandler.getUserById(user_id)
         email = user[1]
         fullname = f"{user[3]} {user[4]}"
-        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         dbHandler.insertDevlog(title, body, fullname, email, current_date)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
 
 
 @app.route("/dashboard.html", methods=["GET", "POST"])
-@sst.login_required
+@sst.loginRequired
 def dashboard():
     '''
     Dashboard for logged in users
@@ -191,13 +191,29 @@ def dashboard():
 
 
 @app.route('/logout', methods=['POST'])
-@sst.login_required
+@sst.loginRequired
 def logout():
     '''
     Logout for logged in
     '''
     session.clear()
     return redirect('/index.html')
+
+
+@app.route('/search')
+@sst.loginRequired
+def search():
+    query = request.args.get('query', '')
+    filter_type = request.args.get('filter', 'all')
+    if filter_type == 'developer':
+        logs = dbHandler.searchByDeveloper(query)
+    elif filter_type == 'date':
+        logs = dbHandler.searchByDate(query)
+    elif filter_type == 'content':
+        logs = dbHandler.searchByContent(query)
+    else:
+        logs = dbHandler.searchAll(query)
+    return render_template('dashboard.html', logs=logs)
 
 
 # Endpoint for logging CSP violations

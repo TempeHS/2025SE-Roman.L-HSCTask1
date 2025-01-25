@@ -7,6 +7,18 @@
     <div class="row">
     </div>
 </div>
+<div class="container mb-4">
+    <form class="d-flex" method="GET" action="/search">
+        <input class="form-control me-2" type="search" name="query" placeholder="Search logs..." aria-label="Search">
+        <select class="form-select form-select-sm w-50 me-2" name="filter">
+            <option value="all">All</option>
+            <option value="developer">Developer</option>
+            <option value="date">Date</option>
+            <option value="content">Content</option>
+        </select>
+        <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
+</div>
 <div class="container">
     {% for log in logs %}
         <div class="log-card card">

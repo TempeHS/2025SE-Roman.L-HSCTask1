@@ -4,7 +4,7 @@
 
 - ~~Log all failed login attempts and implement a failed login policy (Login rate limiting)~~
 
-- Allow developers to search entries by developer, date, project or log/diary contents
+- ~~Allow developers to search entries by developer, date, project or log/diary contents~~
 
 - ~~SSL encryption~~
 
@@ -16,7 +16,7 @@
 
 - Delete developer logs
 
-- Dark mode theme
+- ~~Dark mode theme~~
 
 ## Increment (what must be achieved by the end of the sprint)
 
@@ -26,11 +26,11 @@
 
 - Developer logs can be removed
 
-- Dark mode theme throughout entire site
+- ~~Dark mode theme throughout entire site~~
 
 - Automatice special formatting
 
-- Search bar for developer logs
+- ~~Search bar for developer logs~~
 
 ## Sprint Review (Focus on project management)
 
