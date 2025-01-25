@@ -2,50 +2,48 @@
 
 ## Sprint backlog list of achievables (annotate changes made during sprint, including data required)
 
-- ~~Ability for new team members to self-sign up~~
+- ~~Log all failed login attempts and implement a failed login policy (Login rate limiting)~~
 
-- ~~Create SQLite database for accounts~~
+- Allow developers to search entries by developer, date, project or log/diary contents
 
-- ~~Input validation and sanitization~~
+- ~~SSL encryption~~
 
-- ~~Password hashing~~
+- Special formatting for proramming languages
 
-- ~~HTTP security headers~~
+- Automatic deletion for accounts inactive for 6+ months
 
-(below was added during sprint since it was too short):
+- Randomise operations and data access patterns for all cryptography processes
 
-- ~~Ability for team members to log-in~~
+- Delete developer logs
 
-- ~~Ability to post log entries~~
+- Dark mode theme
 
 ## Increment (what must be achieved by the end of the sprint)
 
-- ~~Webpage for team members to sign-up/log-in and brought to form page~~
+- Account is removed from database as well as their logs
 
-- ~~Passwords are hashed in SQLite~~
+- Failed login attempts are logged and user is alerted after 3+ failed
 
-- ~~Inputs are sanitized in database~~
+- Developer logs can be removed
 
-- ~~Irregular characters are blocked from input~~
+- Dark mode theme throughout entire site
 
-- ~~Blocks requests from unknown websites~~
+- Automatice special formatting
+
+- Search bar for developer logs
 
 ## Sprint Review (Focus on project management)
 
-- Didn't git commit consistently
-
-- Focused too much on minor features (outside scope of sprint)
+- 
 
 ### What challenges did you have
 
-- VSCode preferences
-
-- Buggy session management
+- 
 
 ### What did you do well
 
-- File management
+- 
 
 ### What will you do differently next time
 
-- Focus directly on sprint achievables
+- 
