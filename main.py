@@ -1,13 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta # Date and time
+from urllib.parse import urlparse # URL parsing
 import logging
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for, jsonify
-from urllib.parse import urlparse
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
-from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address # Rate limiter
+from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 import userManagement as dbHandler
-import ssl
+import ssl # SSL context
 
 
 app_log = logging.getLogger(__name__)
@@ -20,14 +22,23 @@ logging.basicConfig(
 
 
 app = Flask(__name__)
+# CSRF
+app.secret_key = b"f53oi3uriq9pifpff;apl"
+csrf = CSRFProtect(app)
+# 30d expiration
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_HTTPONLY=True
 )
-app.secret_key = b"f53oi3uriq9pifpff;apl"
-csrf = CSRFProtect(app)
+# Default rate limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
 
 
 # Redirect index.html to domain root for consistent UX
@@ -100,7 +111,7 @@ def signup():
             username, password
         ):
             print("User exists or invalid credentials")
-            return render_template("/signup.html")
+            return redirect(url_for('signup'))
 
         dbHandler.insertUser(username, password)
         return render_template("/index.html")
@@ -108,6 +119,7 @@ def signup():
 
 
 @app.route("/index.html", methods=["GET", "POST"])
+@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
@@ -128,9 +140,15 @@ def login():
             session['user_id'] = user[0]
             session['username'] = username
             session['logged_in'] = True
+
+            app_log.info("Successful login: %s", username)
             logs = dbHandler.listDevlogs()
             return render_template("/dashboard.html", logs=logs, value=username, state=True)
-    return render_template("/index.html")
+        else:
+            app_log.warning("Failed login attempt: %s | %s | %s",
+                            username, request.remote_addr, datetime.now())
+
+    return redirect(url_for('index'))
 
 
 @app.route("/form.html", methods=["GET", "POST"])
