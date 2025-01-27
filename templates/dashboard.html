@@ -21,15 +21,17 @@
 </div>
 <div class="container">
     {% for log in logs %}
-        <div class="log-card card">
-            <div class="log-header" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
-                <h3>{{ log.title|safe }}</h3>
-                <div class="log-meta">Posted by {{ log.fullname }} on {{ log.date }}</div>
-            </div>
-            <div class="collapse" id="collapse{{ loop.index }}">
-                <div class="log-content">{{ log.body|safe|nl2br }}</div>
-            </div>
+    <div class="log-card card">
+        <div class="log-header" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+            <h3>{{ log.title|safe }}</h3>
+            <div class="log-meta">Posted by {{ log.fullname }} on {{ log.date
+                }}</div>
         </div>
+        <div class="collapse" id="collapse{{ loop.index }}">
+            <div class="log-content" style="white-space: pre-wrap;">{{
+                log.body|safe }}</div>
+        </div>
+    </div>
     {% endfor %}
 </div>
 {% endblock %}

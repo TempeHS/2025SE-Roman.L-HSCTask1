@@ -1,8 +1,16 @@
 import sqlite3 as sql
 
+from flask_login import LoginManager, UserMixin # Login manager
 from src import sanitize_and_validate as sv
 from src import password_hashing as psh
 
+
+class User(UserMixin):
+    def __init__(self, id, email, firstname, lastname):
+        self.id = id
+        self.email = email
+        self.firstname = firstname
+        self.lastname = lastname
 
 ## User related functions
 def insertUser(email, password, firstname, lastname):
@@ -10,13 +18,13 @@ def insertUser(email, password, firstname, lastname):
         return False
 
     password = psh.hashPassword(password)
-    email = sv.sanitize(email)
+    email = sv.sanitize(email).lower()
     firstname = sv.sanitize(firstname)
     lastname = sv.sanitize(lastname)
 
     con = sql.connect(".databaseFiles/database.db")
     cur = con.cursor()
-    cur.execute("INSERT INTO users (email, password, firstName, lastName) VALUES (?,?,?,?)", (email, password, firstname, lastname))
+    cur.execute("INSERT INTO users (email, password, firstname, lastname) VALUES (?,?,?,?)", (email, password, firstname, lastname))
     con.commit()
     con.close()
     return True
@@ -34,7 +42,7 @@ def userExists(email: str) -> bool:
 def retrieveUsers(email: str) -> tuple:
     con = sql.connect(".databaseFiles/database.db")
     cur = con.cursor()
-    cur.execute("SELECT id, email, password FROM users WHERE email = ?", (email,))
+    cur.execute("SELECT id, email, password, firstname, lastname FROM users WHERE email = ?", (email,))
     user = cur.fetchone()
     con.close()
     return user if user else False
@@ -46,10 +54,25 @@ def getUserById(user_id):
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
     con.close()
+    if user:
+        return User(user[0], user[1], user[3], user[4])
     return user
 
+
+def deleteUserById(user_id):
+    try:
+        con = sql.connect(".databaseFiles/database.db")
+        cur = con.cursor()
+        cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        con.commit()
+        con.close()
+        return True
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        return False
+
 ## Devlog related functions
-def map_devlog_rows(data):
+def mapDevlogRows(data):
     return [{
         'title': row[2],
         'body': sv.convertLinks(row[3]),
@@ -71,7 +94,7 @@ def listDevlogs() -> list:
     cur = con.cursor()
     data = cur.execute("SELECT * FROM developer_log").fetchall()
     con.close()
-    return map_devlog_rows(data)
+    return mapDevlogRows(data)
 
 ## Devlog query functions
 def searchByDeveloper(query):
@@ -80,7 +103,7 @@ def searchByDeveloper(query):
     cur.execute("SELECT * FROM developer_log WHERE fullname LIKE ?", (f'%{query}%',))
     data = cur.fetchall()
     con.close()
-    return map_devlog_rows(data)
+    return mapDevlogRows(data)
 
 def searchByDate(query):
     con = sql.connect('.databaseFiles/database.db')
@@ -88,7 +111,7 @@ def searchByDate(query):
     cur.execute("SELECT * FROM developer_log WHERE date LIKE ?", (f'%{query}%',))
     data = cur.fetchall()
     con.close()
-    return map_devlog_rows(data)
+    return mapDevlogRows(data)
 
 def searchByContent(query):
     con = sql.connect('.databaseFiles/database.db')
@@ -96,7 +119,7 @@ def searchByContent(query):
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ?", (f'%{query}%', f'%{query}%'))
     data = cur.fetchall()
     con.close()
-    return map_devlog_rows(data)
+    return mapDevlogRows(data)
 
 def searchAll(query):
     con = sql.connect('.databaseFiles/database.db')
@@ -104,4 +127,4 @@ def searchAll(query):
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ? OR fullname LIKE ? OR date LIKE ?", (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
     data = cur.fetchall()
     con.close()
-    return map_devlog_rows(data)
+    return mapDevlogRows(data)

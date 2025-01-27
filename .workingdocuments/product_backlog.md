@@ -26,9 +26,9 @@
 
 - ~~Create SQLite database for accounts~~
 
-- Ability for account deletion
+- ~~Ability for account deletion~~
 
-- SSL encryption
+- ~~SSL encryption~~
 
 - style.css
 
@@ -36,10 +36,14 @@
 
 - Limit to how many logs can appear on one page
 
-- Special formatting for proramming languages
+- Special formatting for programming languages
 
 - Automatic deletion for accounts inactive for 6+ months
 
 - Randomise operations and data access patterns for all cryptography processes
 
 - Delete developer logs
+
+- Remember me (session management)
+
+- Password requirements

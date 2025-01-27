@@ -4,23 +4,25 @@
     <div class="login-card">
         <h3 class="login-title">Signup</h3>
         <form action="/signup.html" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="row">
-              <div class="col-md-6">
-                  <input type="text" name="firstName" class="form-control mb-3" placeholder="First Name" required/>
-              </div>
-              <div class="col-md-6">
-                  <input type="text" name="lastName" class="form-control mb-3" placeholder="Last Name" required/>
-              </div>
+                <div class="col-md-6">
+                    <input type="text" name="firstname" class="form-control mb-3" placeholder="First Name" required />
+                </div>
+                <div class="col-md-6">
+                    <input type="text" name="lastname" class="form-control mb-3" placeholder="Last Name" required />
+                </div>
             </div>
-            <input name="email" type="email" class="form-control mb-3" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2, 4}$" placeholder="name@example.com">
-            <input type="password" name="password" class="form-control mb-3" placeholder="Password" required/>
-            <button type="submit" class="btn btn-dark w-100 mb-3">Create Account</button>
+            <input name="email" type="email" class="form-control mb-3"
+                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2, 4}$" placeholder="name@example.com">
+            <input type="password" name="password" class="form-control mb-3" placeholder="Password" required />
+            <button type="submit" class="btn btn-dark w-100 mb-3">Create
+                Account</button>
         </form>
         <div class="text-center mt-3 d-flex align-items-center justify-content-center">
-          <p class="text-muted mb-0 me-2">Already have an account?</p>
-          <a href="index.html">Login</a>        
-      </div>
+            <p class="text-muted mb-0 me-2">Already have an account?</p>
+            <a href="index.html">Login</a>
+        </div>
     </div>
 </div>
 {% endblock %}

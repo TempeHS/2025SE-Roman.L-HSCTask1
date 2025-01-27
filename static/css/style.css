@@ -19,6 +19,10 @@ body {
   padding: 1rem 0;
 }
 
+.navbar {
+  height: 50px;
+}
+
 /* Login and signup page */
 .login-container {
   min-height: 100vh;

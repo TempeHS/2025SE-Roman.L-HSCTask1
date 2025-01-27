@@ -8,9 +8,15 @@
 
 - ~~SSL encryption~~
 
-- Special formatting for proramming languages
+- Special formatting for programming languages
 
 - Automatic deletion for accounts inactive for 6+ months
+
+- Download user data, ~~manual deletion~~
+
+- Remember me (session management)
+
+- Password requirements
 
 - Randomise operations and data access patterns for all cryptography processes
 

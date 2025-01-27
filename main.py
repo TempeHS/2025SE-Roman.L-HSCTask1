@@ -2,14 +2,16 @@ from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse # URL parsing
 import logging
 import requests
-from flask import Flask, redirect, render_template, request, session, url_for, make_response, jsonify
+from flask import Flask, redirect, render_template, request, session, url_for, make_response, after_this_request, jsonify
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user # Login manager
 from markupsafe import Markup # Devlog formatting
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 import userManagement as dbHandler # Database functions
+from userManagement import User # User management
 import ssl # SSL context
 
 
@@ -23,9 +25,11 @@ logging.basicConfig(
 
 
 app = Flask(__name__)
+
 # CSRF
 app.secret_key = b"f53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
+
 # 30d expiration
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
@@ -34,10 +38,14 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True
 )
 
-def nl2br(value):
-    return Markup(value.replace('\n', '\n'))
+# New login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-app.jinja_env.filters['nl2br'] = nl2br
+@login_manager.user_loader
+def load_user(user_id):
+    return dbHandler.getUserById(user_id)
 
 # Default rate limiter
 """
@@ -48,6 +56,15 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 """
+
+# Cache control headers
+def disable_cache():
+    @after_this_request
+    def add_no_cache(response):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -81,13 +98,11 @@ def root():
     }
 )
 
-
+@sst.logout_required
 def index():
     '''
     Landing page when user is not logged in
     '''
-    if session.get('logged_in'):
-        return redirect('/dashboard.html')
     return render_template("/index.html")
 
 
@@ -100,7 +115,7 @@ def privacy():
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
-@sst.logoutRequired
+@login_manager.unauthorized_handler
 def signup():
     '''
     Signup page for new users
@@ -114,8 +129,8 @@ def signup():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        firstName = request.form["firstName"]
-        lastName = request.form["lastName"]
+        firstname = request.form["firstname"]
+        lastname = request.form["lastname"]
 
         if dbHandler.userExists(email) or not sv.validateCredentials(
             password
@@ -123,14 +138,14 @@ def signup():
             print("User exists or invalid credentials")
             return redirect(url_for('signup'))
 
-        dbHandler.insertUser(email, password, firstName, lastName)
+        dbHandler.insertUser(email, password, firstname, lastname)
         return render_template("/index.html")
     return render_template("/signup.html")
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-#@limiter.limit("5 per day")
-@sst.logoutRequired
+# @limiter.limit("5 per day")
+@sst.logout_required
 def login():
     '''
     Login page for new users
@@ -146,23 +161,17 @@ def login():
 
         user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
-            session.permanent = True
-            session['user_id'] = user[0]
-            session['email'] = email
-            session['logged_in'] = True
-
+            user_obj = User(user[0], user[1], user[3], user[4])
+            login_user(user_obj)
             app_log.info("Successful login: %s", email)
             logs = dbHandler.listDevlogs()
-            return render_template("/dashboard.html", logs=logs, value=user[0], state=True)
-        else:
-            app_log.warning("Failed login attempt: %s | %s | %s",
-                            email, request.remote_addr, datetime.now())
-
+            return render_template("/dashboard.html", logs=logs)
+        app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
     return redirect(url_for('index'))
 
 
 @app.route("/form.html", methods=["GET", "POST"])
-@sst.loginRequired
+@login_required
 def form():
     '''
     Form page for posting, login required
@@ -170,10 +179,10 @@ def form():
     if request.method == "POST":
         title = request.form["title"]
         body = request.form["body"]
-        user_id = session.get('user_id')
+        user_id = current_user.id
         user = dbHandler.getUserById(user_id)
-        email = user[1]
-        fullname = f"{user[3]} {user[4]}"
+        email = user.email
+        fullname = f"{user.firstname} {user.lastname}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         dbHandler.insertDevlog(title, body, fullname, email, current_date)
         return redirect(url_for('dashboard'))
@@ -181,7 +190,7 @@ def form():
 
 
 @app.route("/dashboard.html", methods=["GET", "POST"])
-@sst.loginRequired
+@login_required
 def dashboard():
     '''
     Dashboard for logged in users
@@ -191,18 +200,21 @@ def dashboard():
 
 
 @app.route('/logout', methods=['POST'])
-@sst.loginRequired
+@login_required
 def logout():
     '''
     Logout for logged in
     '''
-    session.clear()
+    logout_user()
     return redirect('/index.html')
 
 
 @app.route('/search')
-@sst.loginRequired
+@login_required
 def search():
+    '''
+    Search developer logs for logged in
+    '''
     query = request.args.get('query', '')
     filter_type = request.args.get('filter', 'all')
     if filter_type == 'developer':
@@ -216,12 +228,40 @@ def search():
     return render_template('dashboard.html', logs=logs)
 
 
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def deleteUser():
+    user_id = current_user.id
+    try:
+        dbHandler.deleteUserById(user_id)
+        logout_user()
+        app_log.info("Account deleted for user ID: %s", user_id)
+        return redirect(url_for('index'))
+    except Exception as e:
+        app_log.error("Error deleting account for user ID %s: %s", user_id, str(e))
+        return "An error occurred while trying to delete your account. Please try again.", 500
+
 # Endpoint for logging CSP violations
 @app.route("/csp_report", methods=["POST"])
 @csrf.exempt
 def csp_report():
+    '''
+    Report CSP violations
+    '''
     app.logger.critical(request.data.decode())
     return "done"
+
+
+def checkSessionTimeout():
+    '''
+    Session timeout check, 30 minutes
+    '''
+    if 'user_id' in session:
+        last_activity = session.get('last_activity')
+        if last_activity and datetime.now() - last_activity > timedelta(minutes=30):
+            logout_user()
+            return redirect(url_for('login'))
+        session['last_activity'] = datetime.now()
 
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

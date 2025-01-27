@@ -1,6 +1,7 @@
 import html
 import re
 
+
 def validateCredentials(password):
     if not isinstance(password, str):
         return False
