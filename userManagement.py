@@ -1,6 +1,6 @@
 import sqlite3 as sql
 
-from flask_login import LoginManager, UserMixin # Login manager
+from flask_login import UserMixin
 from src import sanitize_and_validate as sv
 from src import password_hashing as psh
 
@@ -98,33 +98,37 @@ def listDevlogs() -> list:
 
 ## Devlog query functions
 def searchByDeveloper(query):
+    safe_query = sv.sanitizeQuery(query)
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
-    cur.execute("SELECT * FROM developer_log WHERE fullname LIKE ?", (f'%{query}%',))
+    cur.execute("SELECT * FROM developer_log WHERE fullname LIKE ?", (f'%{safe_query}%',))
     data = cur.fetchall()
     con.close()
     return mapDevlogRows(data)
 
 def searchByDate(query):
+    safe_query = sv.sanitizeQuery(query)
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
-    cur.execute("SELECT * FROM developer_log WHERE date LIKE ?", (f'%{query}%',))
+    cur.execute("SELECT * FROM developer_log WHERE date LIKE ?", (f'%{safe_query}%',))
     data = cur.fetchall()
     con.close()
     return mapDevlogRows(data)
 
 def searchByContent(query):
+    safe_query = sv.sanitizeQuery(query)
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
-    cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ?", (f'%{query}%', f'%{query}%'))
+    cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ?", (f'%{safe_query}%', f'%{safe_query}%'))
     data = cur.fetchall()
     con.close()
     return mapDevlogRows(data)
 
 def searchAll(query):
+    safe_query = sv.sanitizeQuery(query)
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
-    cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ? OR fullname LIKE ? OR date LIKE ?", (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+    cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ? OR fullname LIKE ? OR date LIKE ?", (f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%'))
     data = cur.fetchall()
     con.close()
     return mapDevlogRows(data)

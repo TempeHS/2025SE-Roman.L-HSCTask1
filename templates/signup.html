@@ -15,7 +15,12 @@
             </div>
             <input name="email" type="email" class="form-control mb-3"
                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2, 4}$" placeholder="name@example.com">
-            <input type="password" name="password" class="form-control mb-3" placeholder="Password" required />
+            <input type="password" name="password" id="password" class="form-control mb-3" placeholder="Password"
+                required minlength="8" pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$"
+                title="Password must be at least 8 characters long and contain at least one letter and one number." />
+            <small id="password-requirements" class="form-text text-muted">
+                Password must be at least 8 characters long and contain at least one letter and one number.
+            </small>
             <button type="submit" class="btn btn-dark w-100 mb-3">Create
                 Account</button>
         </form>

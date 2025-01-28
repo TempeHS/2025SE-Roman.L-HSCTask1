@@ -12,11 +12,11 @@
 
 - Automatic deletion for accounts inactive for 6+ months
 
-- Download user data, ~~manual deletion~~
+- ~~Download user data, manual deletion~~
 
 - Remember me (session management)
 
-- Password requirements
+- ~~Password requirements~~
 
 - Randomise operations and data access patterns for all cryptography processes
 
@@ -26,9 +26,9 @@
 
 ## Increment (what must be achieved by the end of the sprint)
 
-- Account is removed from database as well as their logs
+- ~~Account is removed from database~~ as well as their logs
 
-- Failed login attempts are logged and user is alerted after 3+ failed
+- ~~Failed login attempts are logged~~ and user is alerted after 3+ failed
 
 - Developer logs can be removed
 

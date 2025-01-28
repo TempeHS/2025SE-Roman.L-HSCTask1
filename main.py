@@ -2,7 +2,7 @@ from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse # URL parsing
 import logging
 import requests
-from flask import Flask, redirect, render_template, request, session, url_for, make_response, after_this_request, jsonify
+from flask import Flask, redirect, render_template, request, session, url_for, make_response, after_this_request, jsonify, Response, send_file
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
@@ -12,7 +12,9 @@ from markupsafe import Markup # Devlog formatting
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
+import json # JSON parsing
 import ssl # SSL context
+from io import BytesIO # File handling
 
 
 app_log = logging.getLogger(__name__)
@@ -48,17 +50,18 @@ def load_user(user_id):
     return dbHandler.getUserById(user_id)
 
 # Default rate limiter
-"""
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
 )
-"""
 
 # Cache control headers
 def disable_cache():
+    '''
+    Disable cache for all routes
+    '''
     @after_this_request
     def add_no_cache(response):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
@@ -163,6 +166,7 @@ def login():
         if user and psh.verifyPassword(password, user[2]):
             user_obj = User(user[0], user[1], user[3], user[4])
             login_user(user_obj)
+
             app_log.info("Successful login: %s", email)
             logs = dbHandler.listDevlogs()
             return render_template("/dashboard.html", logs=logs)
@@ -231,15 +235,44 @@ def search():
 @app.route('/delete_account', methods=['POST'])
 @login_required
 def deleteUser():
+    '''
+    Removes user from database
+    '''
     user_id = current_user.id
     try:
         dbHandler.deleteUserById(user_id)
         logout_user()
-        app_log.info("Account deleted for user ID: %s", user_id)
+        app_log.info("Successful account deletion: %s", user_id)
         return redirect(url_for('index'))
     except Exception as e:
-        app_log.error("Error deleting account for user ID %s: %s", user_id, str(e))
+        app_log.error("Failed account deletion attempt %s: %s", user_id, str(e))
         return "An error occurred while trying to delete your account. Please try again.", 500
+
+@app.route('/download_data', methods=['GET'])
+@login_required
+#@limiter.limit("5 per day")
+def downloadUser():
+    '''
+    Download user data as JSON
+    '''
+    user_id = request.args.get('user_id', type=int)
+    if not user_id:
+        return jsonify({"error": "Incorrect User"}), 400
+    user = dbHandler.getUserById(user_id)
+    if current_user.id != user_id:
+        app_log.info("Unauthorized access %s: %s", current_user, user_id)
+        return jsonify({"error": "User not found"}), 404
+
+    user_data = {
+        "id": user.id,
+        "email": user.email,
+        "firstname": user.firstname,
+        "lastname": user.lastname,
+    }
+
+    response = jsonify(user_data)
+    response.headers["Content-Disposition"] = f"attachment;filename=user_data_{user_id}.json"
+    return response
 
 # Endpoint for logging CSP violations
 @app.route("/csp_report", methods=["POST"])
@@ -262,7 +295,6 @@ def checkSessionTimeout():
             logout_user()
             return redirect(url_for('login'))
         session['last_activity'] = datetime.now()
-
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
