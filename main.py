@@ -12,9 +12,11 @@ from markupsafe import Markup # Devlog formatting
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
-import json # JSON parsing
 import ssl # SSL context
 from io import BytesIO # File handling
+import os
+import time
+import random
 
 
 app_log = logging.getLogger(__name__)
@@ -29,7 +31,7 @@ logging.basicConfig(
 app = Flask(__name__)
 
 # CSRF
-app.secret_key = b"f53oi3uriq9pifpff;apl"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
 csrf = CSRFProtect(app)
 
 # 30d expiration
@@ -37,7 +39,8 @@ app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_HTTPONLY=True
+    SESSION_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_DURATION=timedelta(days=30)
 )
 
 # New login manager
@@ -68,6 +71,15 @@ def disable_cache():
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
         return response
+
+@app.after_request
+def set_security_headers(response):
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    return response
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -161,15 +173,20 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        remember = request.form.get("remember") == "on"
 
         user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
             user_obj = User(user[0], user[1], user[3], user[4])
-            login_user(user_obj)
+            login_user(user_obj, remember=remember)
+
+            time.sleep(random.uniform(0.1, 0.2))
 
             app_log.info("Successful login: %s", email)
             logs = dbHandler.listDevlogs()
             return render_template("/dashboard.html", logs=logs)
+        else:
+            time.sleep(random.uniform(0.1, 0.2))
         app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
     return redirect(url_for('index'))
 
@@ -285,6 +302,7 @@ def csp_report():
     return "done"
 
 
+@app.before_request
 def checkSessionTimeout():
     '''
     Session timeout check, 30 minutes

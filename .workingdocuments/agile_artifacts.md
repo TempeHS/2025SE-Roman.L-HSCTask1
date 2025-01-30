@@ -8,17 +8,15 @@
 
 - ~~SSL encryption~~
 
-- Special formatting for programming languages
-
 - Automatic deletion for accounts inactive for 6+ months
 
 - ~~Download user data, manual deletion~~
 
-- Remember me (session management)
+- ~~Remember me (session management)~~
 
 - ~~Password requirements~~
 
-- Randomise operations and data access patterns for all cryptography processes
+- ~~Randomise operations and data access patterns for all cryptography processes~~
 
 - Delete developer logs
 
@@ -33,8 +31,6 @@
 - Developer logs can be removed
 
 - ~~Dark mode theme throughout entire site~~
-
-- Automatice special formatting
 
 - ~~Search bar for developer logs~~
 

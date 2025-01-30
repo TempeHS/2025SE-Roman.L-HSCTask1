@@ -1,9 +1,9 @@
 import sqlite3 as sql
 
 from flask_login import UserMixin
-from src import sanitize_and_validate as sv
-from src import password_hashing as psh
-
+from src import sanitize_and_validate as sv, password_hashing as psh
+import time
+import random
 
 class User(UserMixin):
     def __init__(self, id, email, firstname, lastname):
@@ -40,6 +40,7 @@ def userExists(email: str) -> bool:
 
 
 def retrieveUsers(email: str) -> tuple:
+    time.sleep(random.uniform(0.1, 0.2))
     con = sql.connect(".databaseFiles/database.db")
     cur = con.cursor()
     cur.execute("SELECT id, email, password, firstname, lastname FROM users WHERE email = ?", (email,))

@@ -1,10 +1,12 @@
 import bcrypt
-
+import random
+import time
 
 def hashPassword(password: str) -> str:
     password_bytes = password.encode('utf-8')
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password_bytes, salt)
+    time.sleep(random.uniform(0.05, 0.2))
     return hashed.decode('utf-8')
 
 
