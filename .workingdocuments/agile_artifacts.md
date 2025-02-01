@@ -8,7 +8,7 @@
 
 - ~~SSL encryption~~
 
-- Automatic deletion for accounts inactive for 6+ months
+- ~~Automatic deletion for accounts inactive for 6+ months~~
 
 - ~~Download user data, manual deletion~~
 
@@ -18,7 +18,7 @@
 
 - ~~Randomise operations and data access patterns for all cryptography processes~~
 
-- Delete developer logs
+- ~~Delete developer logs~~
 
 - ~~Dark mode theme~~
 
@@ -28,7 +28,7 @@
 
 - ~~Failed login attempts are logged~~ and user is alerted after 3+ failed
 
-- Developer logs can be removed
+- ~~Developer logs can be removed~~
 
 - ~~Dark mode theme throughout entire site~~
 

@@ -1,6 +1,7 @@
-import bcrypt
-import random
 import time
+import random
+import bcrypt
+
 
 def hashPassword(password: str) -> str:
     password_bytes = password.encode('utf-8')

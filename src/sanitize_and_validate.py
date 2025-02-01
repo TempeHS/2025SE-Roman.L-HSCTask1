@@ -2,7 +2,7 @@ import html
 import re
 
 
-def validateCredentials(password):
+def validatePassword(password):
     if not isinstance(password, str):
         return False
     if len(password) < 8:
@@ -11,23 +11,36 @@ def validateCredentials(password):
         return False
     if not re.search(r"[0-9]", password):
         return False
+    if len(password) > 255:
+        return False
     return True
 
 
-def sanitize(string: str) -> str:
-    return html.escape(string)
+def validateEmail(email):
+    if not isinstance(email, str):
+        return False
+    if not re.match(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$", email):
+        return False
+    if len(email) > 255:
+        return False
+    return True
+
+
+def validateName(firstname, lastname):
+    if not isinstance(firstname, str) or not isinstance(lastname, str):
+        return False
+    if len(firstname) > 16 or len(lastname) > 16:
+        return False
+    if not re.match(r"^[A-Za-z]+$", firstname) or not re.match(r"^[A-Za-z]+$", lastname):
+        return False
+    return True
 
 
 def sanitizeQuery(query):
     query = query.strip()
-    query = query.replace('%', r'\%').replace('_', r'\_') 
+    query = query.replace('%', r'\%').replace('_', r'\_')
     query = query.replace(';', '')
     query = html.escape(query)
     if len(query) > 255:
-        raise ValueError("Search query is too long.")
+        return query[:255]
     return query
-
-
-def convertLinks(text):
-    url_pattern = r'(https?://[^\s]+)'
-    return re.sub(url_pattern, r'<a href="\1" target="_blank">\1</a>', text)

@@ -10,19 +10,18 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/index.html"><img
-              src="{{ url_for('static', filename='icons/home.svg') }}" alt="Create" width="20" height="20"> Home</a>
+              src="{{ url_for('static', filename='icons/home.svg') }}" alt="Home" width="24" height="20" style="padding-right: 4px;">Home</a>
         </li>
         <li class="nav-item">
         </li>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/form.html"><img src="{{ url_for('static', filename='icons/plus-square.svg') }}"
-              alt="Create" width="20" height="20"> Create</a>
+              alt="Create" width="24" height="20" style="padding-right: 4px;">Create</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Create" width="20" height="20">
-            Settings</a>
+            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Settings" width="24" height="20" style="padding-right: 4px;">Settings</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">Two-step verification</a></li>
             <li><a class="dropdown-item" href="/download_data?user_id={{ current_user.id }}">Download user data</a></li>
@@ -37,7 +36,7 @@
             <form action="/logout" method="post">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="dropdown-item text-danger"><img
-                  src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Create" width="20" height="20">
+                  src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Logout" width="24" height="20" style="padding-right: 4px;">
                 Logout</button>
             </form>
         </li>
@@ -47,11 +46,5 @@
         <a class="nav-link disabled" aria-disabled="true"></a>
       </li>
       </ul>
-
-      <body data-bs-theme="dark">
-        <div class="form-check form-switch mx-4">
-          <input class="form-check-input p-2" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked
-            onclick="darkMode()" />
-        </div>
 </nav>
 {% endif %}

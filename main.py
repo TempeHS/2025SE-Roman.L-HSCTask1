@@ -1,45 +1,46 @@
+# Standard Library Imports
+import os
+import ssl # SSL context
+import time
+import random
+import logging
 from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse # URL parsing
-import logging
+
+# Third-Party Imports
 import requests
-from flask import Flask, redirect, render_template, request, session, url_for, make_response, after_this_request, jsonify, Response, send_file
+from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user # Login manager
-from markupsafe import Markup # Devlog formatting
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user # Login manager
+from apscheduler.schedulers.background import BackgroundScheduler
+
+# Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
+from src.config import app_log # Logging
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
-import ssl # SSL context
-from io import BytesIO # File handling
-import os
-import time
-import random
-
-
-app_log = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="security_log.log",
-    encoding="utf-8",
-    level=logging.DEBUG,
-    format="%(asctime)s %(message)s",
-)
 
 
 app = Flask(__name__)
 
 # CSRF
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
+# app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
+app.secret_key =  b"f53oi3uriq9pifpff;apl"
 csrf = CSRFProtect(app)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(dbHandler.deleteUserByInactivity, 'interval', days=1)  # Run daily
+scheduler.start()
 
 # 30d expiration
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SAMESITE='Lax',
     REMEMBER_COOKIE_DURATION=timedelta(days=30)
 )
 
@@ -56,30 +57,9 @@ def load_user(user_id):
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["200 per day", "100 per hour"],
     storage_uri="memory://",
 )
-
-# Cache control headers
-def disable_cache():
-    '''
-    Disable cache for all routes
-    '''
-    @after_this_request
-    def add_no_cache(response):
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
-        return response
-
-@app.after_request
-def set_security_headers(response):
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-    return response
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -97,14 +77,14 @@ def root():
         # Server Side CSP is consistent with meta CSP in layout.html
         "base-uri": "'self'",
         "default-src": "'self'",
-        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com",
-        "script-src": "'self' 'unsafe-inline' 'unsafe-eval'",
-        "img-src": "'self' data:",
+        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tiny.cloud",
+        "script-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
+        "img-src": "'self' data: https://sp.tinymce.com",
         "media-src": "'self'",
         "font-src": "'self' https://fonts.gstatic.com data: https://fonts.googleapis.com",
         "object-src": "'self'",
         "child-src": "'self'",
-        "connect-src": "'self'",
+        "connect-src": "'self' https://cdn.tiny.cloud",
         "worker-src": "'self'",
         "report-uri": "/csp_report",
         "frame-ancestors": "'none'",
@@ -112,6 +92,7 @@ def root():
         "frame-src": "'none'"
     }
 )
+
 
 @sst.logout_required
 def index():
@@ -130,7 +111,7 @@ def privacy():
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
-@login_manager.unauthorized_handler
+@sst.logout_required
 def signup():
     '''
     Signup page for new users
@@ -147,10 +128,18 @@ def signup():
         firstname = request.form["firstname"]
         lastname = request.form["lastname"]
 
-        if dbHandler.userExists(email) or not sv.validateCredentials(
-            password
-        ):
-            print("User exists or invalid credentials")
+        if dbHandler.userExists(email):
+            flash('User already exists!', 'error')
+            print("User already exists with this email")
+            return redirect(url_for('signup'))
+        if not sv.validatePassword(password):
+            print("Invalid password format")
+            return redirect(url_for('signup'))
+        if not sv.validateEmail(email):
+            print("Invalid email format")
+            return redirect(url_for('signup'))
+        if not sv.validateName(firstname, lastname):
+            print("Invalid name format")
             return redirect(url_for('signup'))
 
         dbHandler.insertUser(email, password, firstname, lastname)
@@ -179,15 +168,15 @@ def login():
         if user and psh.verifyPassword(password, user[2]):
             user_obj = User(user[0], user[1], user[3], user[4])
             login_user(user_obj, remember=remember)
-
             time.sleep(random.uniform(0.1, 0.2))
-
             app_log.info("Successful login: %s", email)
+            dbHandler.updateLastActivity(user[0])
             logs = dbHandler.listDevlogs()
             return render_template("/dashboard.html", logs=logs)
         else:
             time.sleep(random.uniform(0.1, 0.2))
-        app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
+            app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
+            flash("Invalid credentials.", "error")
     return redirect(url_for('index'))
 
 
@@ -202,10 +191,9 @@ def form():
         body = request.form["body"]
         user_id = current_user.id
         user = dbHandler.getUserById(user_id)
-        email = user.email
         fullname = f"{user.firstname} {user.lastname}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        dbHandler.insertDevlog(title, body, fullname, email, current_date)
+        dbHandler.insertDevlog(title, body, fullname, user_id, current_date)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
 
@@ -216,6 +204,7 @@ def dashboard():
     '''
     Dashboard for logged in users
     '''
+    checkSessionTimeout()
     logs = dbHandler.listDevlogs()
     return render_template('/dashboard.html', logs=logs)
 
@@ -263,7 +252,26 @@ def deleteUser():
         return redirect(url_for('index'))
     except Exception as e:
         app_log.error("Failed account deletion attempt %s: %s", user_id, str(e))
-        return "An error occurred while trying to delete your account. Please try again.", 500
+        flash("An error occurred while trying to delete your account. Please try again.", "error")
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/delete_log', methods=['POST'])
+@login_required
+def deleteLog():
+    '''
+    Delete log from database
+    '''
+    user_id = current_user.id
+    log_id = request.form.get('log_id')
+    try:
+        dbHandler.deleteLogs(user_id, log_id)
+        app_log.info("Successful log deletion: %s: %s", user_id, log_id)
+    except Exception as e:
+        app_log.error("Failed log deletion attempt %s: %s", user_id, str(e))
+        flash("An error occurred while trying to delete your log. Please try again.", "error")
+    return redirect(url_for('dashboard'))
+
 
 @app.route('/download_data', methods=['GET'])
 @login_required
@@ -281,7 +289,7 @@ def downloadUser():
         return jsonify({"error": "User not found"}), 404
 
     user_data = {
-        "id": user.id,
+        "user_id": user.id,
         "email": user.email,
         "firstname": user.firstname,
         "lastname": user.lastname,

@@ -1,5 +1,7 @@
 Flask
 bcrypt
-flask_wtf
+flask-wtf
 flask-csp
-flask_limiter
+flask-limiter
+flask-login
+APScheduler

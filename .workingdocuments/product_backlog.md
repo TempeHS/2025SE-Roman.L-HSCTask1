@@ -8,7 +8,7 @@
 
 - Application meets minimum WC3 PWA standards
 
-- Allow developers to search entries by developer, date, project or log/diary contents
+- ~~Allow developers to search entries by developer, date, project or log/diary contents~~
 
 - API data sharing and 2FA authentication
 
@@ -16,7 +16,7 @@
 
 - ~~Input validation and sanitization~~
 
-- Log all failed login attempts and implement a failed login policy (Login rate limiting)
+- ~~Log all failed login attempts and implement a failed login policy (Login rate limiting)~~
 
 - ~~HTTP security headers~~
 
@@ -36,14 +36,16 @@
 
 - Limit to how many logs can appear on one page
 
-- Special formatting for programming languages
+- ~~Special formatting~~ for programming languages
 
-- Automatic deletion for accounts inactive for 6+ months
+- ~~Automatic deletion for accounts inactive for 6+ months~~
 
-- Randomise operations and data access patterns for all cryptography processes
+- ~~Randomise operations and data access patterns for all cryptography processes~~
 
 - Delete developer logs
 
-- Remember me (session management)
+- ~~Remember me (session management)~~
 
-- Password requirements
+- ~~Password requirements~~
+
+- Update favicon
