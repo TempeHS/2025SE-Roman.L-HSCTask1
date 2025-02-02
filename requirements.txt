@@ -5,3 +5,4 @@ flask-csp
 flask-limiter
 flask-login
 APScheduler
+django==5.1.5

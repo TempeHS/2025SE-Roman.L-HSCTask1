@@ -10,6 +10,7 @@ from urllib.parse import urlparse, urljoin # URL parsing
 # Third-Party Imports
 import requests
 from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash
+from django.utils.http import url_has_allowed_host_and_scheme
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
@@ -166,8 +167,7 @@ def login():
     '''
     if request.method == "GET" and request.args.get("url"):
         target = request.args.get('url', '')
-        target = target.replace('\\', '')
-        if is_safe_url(target):
+        if url_has_allowed_host_and_scheme(target, allowed_hosts=None):
             return redirect(target, code=302)
         return redirect('/', code=302)
     if request.method == "POST":
