@@ -1,13 +1,55 @@
 import html
+import re
 
 
-def validateCredentials(username, password):
-    if not (1 <= len(username) <= 16 and username.isalpha()):
-        return False
+def validatePassword(password):
     if not isinstance(password, str):
+        return False
+    if len(password) < 8:
+        return False
+    if not re.search(r"[a-zA-Z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    if len(password) > 255:
         return False
     return True
 
 
-def sanitize(string: str) -> str:
-    return html.escape(string)
+def validateEmail(email):
+    if not isinstance(email, str):
+        return False
+    if not re.match(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$", email):
+        return False
+    if len(email) > 255:
+        return False
+    return True
+
+
+def validateName(firstname, lastname):
+    if not isinstance(firstname, str) or not isinstance(lastname, str):
+        return False
+    if len(firstname) > 16 or len(lastname) > 16:
+        return False
+    if not re.match(r"^[A-Za-z]+$", firstname) or not re.match(r"^[A-Za-z]+$", lastname):
+        return False
+    return True
+
+def validateLog(title, body):
+    if not isinstance(title, str):
+        return False
+    if len(title) > 64:
+        return False
+    if len(body) > 2048:
+        return False
+    return True
+
+
+def sanitizeQuery(query):
+    query = query.strip()
+    query = query.replace('%', r'\%').replace('_', r'\_')
+    query = query.replace(';', '')
+    query = html.escape(query)
+    if len(query) > 255:
+        return query[:255]
+    return query

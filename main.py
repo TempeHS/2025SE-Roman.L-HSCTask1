@@ -1,34 +1,75 @@
-import ssl
-from urllib.parse import urlparse
-from datetime import datetime, timedelta
+# Standard Library Imports
+import os
+import ssl # SSL context
+import time
+import random
 import logging
+from datetime import datetime, timedelta # Date and time
+from urllib.parse import urlparse, urljoin # URL parsing
+
+# Third-Party Imports
 import requests
-from flask import Flask, redirect, render_template, request, session, url_for, jsonify
+from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash
+from django.utils.http import url_has_allowed_host_and_scheme
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
-from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh
-import userManagement as dbHandler
+from flask_limiter import Limiter # Rate limiter
+from flask_limiter.util import get_remote_address # Rate limiter
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user # Login manager
+from apscheduler.schedulers.background import BackgroundScheduler
 
-
-app_log = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="security_log.log",
-    encoding="utf-8",
-    level=logging.DEBUG,
-    format="%(asctime)s %(message)s",
-)
-
+# Local Application Imports
+from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
+from src.config import app_log
+from src.security import init_security
+import userManagement as dbHandler # Database functions
+from userManagement import User # User management
 
 app = Flask(__name__)
+init_security(app)
+
+# CSRF
+# app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
+app.secret_key =  b"f53oi3uriq9pifpff;apl"
+csrf = CSRFProtect(app)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(dbHandler.deleteUserByInactivity, 'interval', days=1)  # Run daily
+scheduler.start()
+
+# 30d expiration
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_HTTPONLY=True
+    SESSION_COOKIE_HTTPONLY=True,
+    REMEMBER_COOKIE_SAMESITE='Lax',
+    REMEMBER_COOKIE_DURATION=timedelta(days=30)
 )
-app.secret_key = b"f53oi3uriq9pifpff;apl"
-csrf = CSRFProtect(app)
 
+# New login manager
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    '''
+    Load user by IDs
+    '''
+    return dbHandler.getUserById(user_id)
+
+# Default rate limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "100 per hour"],
+    storage_uri="memory://",
+)
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -46,29 +87,28 @@ def root():
         # Server Side CSP is consistent with meta CSP in layout.html
         "base-uri": "'self'",
         "default-src": "'self'",
-        "style-src": "'self'",
-        "script-src": "'self'",
-        "img-src": "'self' data:",
+        "style-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
+        "script-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
+        "img-src": "'self' data: https://sp.tinymce.com",
         "media-src": "'self'",
         "font-src": "'self'",
         "object-src": "'self'",
         "child-src": "'self'",
-        "connect-src": "'self'",
+        "connect-src": "'self' https://cdn.tiny.cloud",
         "worker-src": "'self'",
         "report-uri": "/csp_report",
         "frame-ancestors": "'none'",
         "form-action": "'self'",
-        "frame-src": "'none'",
+        "frame-src": "'none'"
     }
 )
 
 
+@sst.logout_required
 def index():
     '''
     Landing page when user is not logged in
     '''
-    if session.get('logged_in'):
-        return redirect('/dashboard.html')
     return render_template("/index.html")
 
 
@@ -93,48 +133,66 @@ def signup():
             return redirect(url, code=302)
         return redirect('/', code=302)
     if request.method == "POST":
-        username = request.form["username"]
+        email = request.form["email"]
         password = request.form["password"]
+        firstname = request.form["firstname"]
+        lastname = request.form["lastname"]
 
-        if dbHandler.userExists(username) or not sv.validateCredentials(
-            username, password
-        ):
-            print("User exists or invalid credentials")
-            return render_template("/signup.html")
+        # Validate user input
+        if dbHandler.userExists(email):
+            flash('User already exists!', 'error')
+            print("User already exists with this email")
+            return redirect(url_for('signup'))
+        if not sv.validatePassword(password):
+            print("Invalid password format")
+            return redirect(url_for('signup'))
+        if not sv.validateEmail(email):
+            print("Invalid email format")
+            return redirect(url_for('signup'))
+        if not sv.validateName(firstname, lastname):
+            print("Invalid name format")
+            return redirect(url_for('signup'))
 
-        dbHandler.insertUser(username, password)
+        dbHandler.insertUser(email, password, firstname, lastname)
         return render_template("/index.html")
     return render_template("/signup.html")
 
 
 @app.route("/index.html", methods=["GET", "POST"])
+# @limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
     Login page for new users
     '''
-    if session.get('logged_in'):
-        return redirect('/dashboard.html')
     if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
+        target = request.args.get('url', '')
+        if url_has_allowed_host_and_scheme(target, allowed_hosts=None):
+            return redirect(target, code=302)
+        return redirect('/', code=302)
     if request.method == "POST":
-        username = request.form["username"]
+        email = request.form["email"]
         password = request.form["password"]
+        remember = request.form.get("remember") == "on"
 
-        user = dbHandler.retrieveUsers(username)
+        user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
-            session.permanent = True
-            session['user_id'] = user[0]
-            session['username'] = username
-            session['logged_in'] = True
+            user_obj = User(user[0], user[1], user[3], user[4])
+            login_user(user_obj, remember=remember)
+            time.sleep(random.uniform(0.1, 0.2))
+            app_log.info("Successful login: %s", email)
+            dbHandler.updateLastActivity(user[0])
             logs = dbHandler.listDevlogs()
-            return render_template("/dashboard.html", logs=logs, value=username, state=True)
-    return render_template("/index.html")
+            return render_template("/dashboard.html", logs=logs)
+
+        time.sleep(random.uniform(0.1, 0.2))
+        app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
+        flash("Invalid credentials.", "error")
+    return redirect(url_for('index'))
 
 
 @app.route("/form.html", methods=["GET", "POST"])
-@sst.login_required
+@login_required
 def form():
     '''
     Form page for posting, login required
@@ -142,40 +200,144 @@ def form():
     if request.method == "POST":
         title = request.form["title"]
         body = request.form["body"]
-        username = session['username']
-        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        dbHandler.insertDevlog(title, body, username, current_date)
+
+        if not sv.validateLog(title, body):
+            return redirect(url_for('form'))
+
+        user_id = current_user.id
+        user = dbHandler.getUserById(user_id)
+        fullname = f"{user.firstname} {user.lastname}"
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        dbHandler.insertDevlog(title, body, fullname, user_id, current_date)
+        app_log.info("New log created by %s: %s", user_id, title)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
 
 
 @app.route("/dashboard.html", methods=["GET", "POST"])
-@sst.login_required
+@login_required
 def dashboard():
     '''
     Dashboard for logged in users
     '''
+    checkSessionTimeout()
     logs = dbHandler.listDevlogs()
     return render_template('/dashboard.html', logs=logs)
 
 
 @app.route('/logout', methods=['POST'])
-@sst.login_required
+@login_required
 def logout():
     '''
     Logout for logged in
     '''
-    session.clear()
+    logout_user()
+    flash("You have been logged out.", "info")
     return redirect('/index.html')
 
+
+@app.route('/search')
+@login_required
+def search():
+    '''
+    Search developer logs for logged in
+    '''
+    query = request.args.get('query', '')
+    filter_type = request.args.get('filter', 'all')
+    if filter_type == 'developer':
+        logs = dbHandler.searchByDeveloper(query)
+    elif filter_type == 'date':
+        logs = dbHandler.searchByDate(query)
+    elif filter_type == 'content':
+        logs = dbHandler.searchByContent(query)
+    else:
+        logs = dbHandler.searchAll(query)
+    return render_template('dashboard.html', logs=logs)
+
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def deleteUser():
+    '''
+    Removes user from database
+    '''
+    user_id = current_user.id
+    try:
+        dbHandler.deleteUserById(user_id)
+        logout_user()
+        app_log.info("Successful account deletion: %s", user_id)
+        return redirect(url_for('index'))
+    except Exception as e:
+        app_log.error("Failed account deletion attempt %s: %s", user_id, str(e))
+        flash("An error occurred while trying to delete your account. Please try again.", "error")
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/delete_log', methods=['POST'])
+@login_required
+def deleteLog():
+    '''
+    Delete log from database
+    '''
+    user_id = current_user.id
+    log_id = request.form.get('log_id')
+    try:
+        dbHandler.deleteLogs(user_id, log_id)
+        app_log.info("Successful log deletion: %s: %s", user_id, log_id)
+    except Exception as e:
+        app_log.error("Failed log deletion attempt %s: %s", user_id, str(e))
+        flash("An error occurred while trying to delete your log. Please try again.", "error")
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/download_data', methods=['GET'])
+@login_required
+@limiter.limit("5 per day")
+def downloadUser():
+    '''
+    Download user data as JSON
+    '''
+    user_id = request.args.get('user_id', type=int)
+    if not user_id:
+        return jsonify({"error": "Incorrect User"}), 400
+    user = dbHandler.getUserById(user_id)
+    if current_user.id != user_id:
+        app_log.info("Unauthorized access %s: %s", current_user, user_id)
+        return jsonify({"error": "User not found"}), 404
+
+    user_data = {
+        "user_id": user.id,
+        "email": user.email,
+        "firstname": user.firstname,
+        "lastname": user.lastname,
+    }
+
+    response = jsonify(user_data)
+    response.headers["Content-Disposition"] = f"attachment;filename=user_data_{user_id}.json"
+    return response
 
 # Endpoint for logging CSP violations
 @app.route("/csp_report", methods=["POST"])
 @csrf.exempt
 def csp_report():
+    '''
+    Report CSP violations
+    '''
     app.logger.critical(request.data.decode())
     return "done"
 
+
+@app.before_request
+def checkSessionTimeout():
+    '''
+    Session timeout check, 30 minutes
+    '''
+    if 'user_id' in session:
+        last_activity = session.get('last_activity')
+        if last_activity and datetime.now() - last_activity > timedelta(minutes=30):
+            logout_user()
+            return redirect(url_for('login'))
+        session['last_activity'] = datetime.now()
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
