@@ -1,63 +1,55 @@
+{% if current_user.is_authenticated %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#"> </a>
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarSupportedContent"
-      aria-controls="navbarSupportedContent"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+    <a class="navbar-brand" href="#">image</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="/index.html">Home</a>
+          <a class="nav-link active" aria-current="page" href="/index.html"><img
+              src="{{ url_for('static', filename='icons/home.svg') }}" alt="Home" width="24" height="20" class="icon">Home</a>
         </li>
         <li class="nav-item">
-          {% if not session.get('logged_in') %}
-          <a class="nav-link" href="/signup.html">Signup</a>
-          {% endif %}
         </li>
-        {% if session.get('logged_in') %}
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/form.html"><img src="{{ url_for('static', filename='icons/plus-square.svg') }}"
+              alt="Create" width="24" height="20" class="icon">Create</a>
+        </li>
         <li class="nav-item dropdown">
-          <a
-            class="nav-link dropdown-toggle"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            Settings
-          </a>
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Settings" width="24" height="20" class="icon">Settings</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">Two-step verification</a></li>
-            <li><a class="dropdown-item" href="#">Delete account</a></li>
-            <li><hr class="dropdown-divider" /></li>
-                  <form action="/logout" method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <button type="submit" class="dropdown-item text-danger">Logout</button>
-                </form>
-                {% endif %}
+            <li><a class="dropdown-item" href="/download_data?user_id={{ current_user.id }}">Download user data</a></li>
+            <li>
+            <form action="{{ url_for('deleteUser') }}" method="POST"
+              onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="dropdown-item">Delete Account</button>
+            </form>
             </li>
-          </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" aria-disabled="true"></a>
+            <li>
+              <hr class="dropdown-divider" />
+            </li>
+            <li>
+            <form action="/logout" method="POST"
+            onsubmit="return confirm('Are you sure you want to logout?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="dropdown-item text-danger"><img
+                  src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Logout" width="24" height="20" class="icon">
+                Logout</button>
+            </form>
+          </li>
         </li>
       </ul>
-      <form class="d-flex" role="search">
-        <input
-          class="form-control me-2"
-          type="search"
-          placeholder="Search"
-          aria-label="Search"
-        />
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
-    </div>
-  </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link disabled" aria-disabled="true"></a>
+      </li>
+      </ul>
 </nav>
+{% endif %}
