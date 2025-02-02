@@ -5,7 +5,7 @@ import time
 import random
 import logging
 from datetime import datetime, timedelta # Date and time
-from urllib.parse import urlparse # URL parsing
+from urllib.parse import urlparse, urljoin # URL parsing
 
 # Third-Party Imports
 import requests
@@ -23,7 +23,6 @@ from src.config import app_log
 from src.security import init_security
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
-
 
 app = Flask(__name__)
 init_security(app)
@@ -65,6 +64,11 @@ limiter = Limiter(
     default_limits=["200 per day", "100 per hour"],
     storage_uri="memory://",
 )
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
@@ -160,11 +164,12 @@ def login():
     '''
     Login page for new users
     '''
-    if session.get('logged_in'):
-        return redirect('/dashboard.html')
     if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "")
-        return redirect(url, code=302)
+        target = request.args.get('url', '')
+        target = target.replace('\\', '')
+        if is_safe_url(target):
+            return redirect(target, code=302)
+        return redirect('/', code=302)
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -179,10 +184,10 @@ def login():
             dbHandler.updateLastActivity(user[0])
             logs = dbHandler.listDevlogs()
             return render_template("/dashboard.html", logs=logs)
-        else:
-            time.sleep(random.uniform(0.1, 0.2))
-            app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
-            flash("Invalid credentials.", "error")
+
+        time.sleep(random.uniform(0.1, 0.2))
+        app_log.warning("Failed login attempt: %s | %s | %s", email, request.remote_addr, datetime.now())
+        flash("Invalid credentials.", "error")
     return redirect(url_for('index'))
 
 
