@@ -1,5 +1,4 @@
 import sqlite3 as sql
-
 import html
 import time
 import random

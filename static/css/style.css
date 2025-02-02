@@ -27,6 +27,18 @@ body {
   display: flex;
 }
 
+.icon {
+  padding-right: 4px;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.indent-40 {
+  padding-left: 40px;
+}
+
 /* Login and signup page */
 .login-container {
   min-height: 100vh;
@@ -75,16 +87,22 @@ body {
   margin-left: 1rem;
 }
 
-/* Flash messages */
-.toast-container {
-  position: fixed;
-  top: 0;
-  right: 0;
-  padding: 1rem;
-  z-index: 1050;
+/* Bootstrap toasts */
+
+
+/* Fonts */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/roboto-regular.woff2') format('woff2'),
+      url('/fonts/roboto-regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
 }
 
-.toast {
-  min-width: 250px;
-  max-width: 400px;
+@font-face {
+  font-family: 'Noto Sans';
+  src: url('/fonts/noto-sans-regular.woff2') format('woff2'),
+      url('/fonts/noto-sans-regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
 }

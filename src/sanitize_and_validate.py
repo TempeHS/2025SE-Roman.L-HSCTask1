@@ -35,6 +35,15 @@ def validateName(firstname, lastname):
         return False
     return True
 
+def validateLog(title, body):
+    if not isinstance(title, str):
+        return False
+    if len(title) > 64:
+        return False
+    if len(body) > 2048:
+        return False
+    return True
+
 
 def sanitizeQuery(query):
     query = query.strip()

@@ -2,7 +2,7 @@
 
 - ~~Ability for new team members to self-sign up~~
 
-- Authentication and session management
+- ~~Authentication and session management~~
 
 - ~~Developer log entries are time/date stamped~~
 
@@ -36,13 +36,13 @@
 
 - Limit to how many logs can appear on one page
 
-- ~~Special formatting~~ for programming languages
+- ~~Special formatting~~
 
 - ~~Automatic deletion for accounts inactive for 6+ months~~
 
 - ~~Randomise operations and data access patterns for all cryptography processes~~
 
-- Delete developer logs
+- ~~Delete developer logs~~
 
 - ~~Remember me (session management)~~
 

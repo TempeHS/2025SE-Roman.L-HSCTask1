@@ -19,12 +19,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 # Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
-from src.config import app_log # Logging
+from src.config import app_log
+from src.security import init_security
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
 
 
 app = Flask(__name__)
+init_security(app)
 
 # CSRF
 # app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
@@ -51,6 +53,9 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
+    '''
+    Load user by IDs
+    '''
     return dbHandler.getUserById(user_id)
 
 # Default rate limiter
@@ -77,11 +82,11 @@ def root():
         # Server Side CSP is consistent with meta CSP in layout.html
         "base-uri": "'self'",
         "default-src": "'self'",
-        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tiny.cloud",
+        "style-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
         "script-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
         "img-src": "'self' data: https://sp.tinymce.com",
         "media-src": "'self'",
-        "font-src": "'self' https://fonts.gstatic.com data: https://fonts.googleapis.com",
+        "font-src": "'self'",
         "object-src": "'self'",
         "child-src": "'self'",
         "connect-src": "'self' https://cdn.tiny.cloud",
@@ -128,6 +133,7 @@ def signup():
         firstname = request.form["firstname"]
         lastname = request.form["lastname"]
 
+        # Validate user input
         if dbHandler.userExists(email):
             flash('User already exists!', 'error')
             print("User already exists with this email")
@@ -189,11 +195,16 @@ def form():
     if request.method == "POST":
         title = request.form["title"]
         body = request.form["body"]
+
+        if not sv.validateLog(title, body):
+            return redirect(url_for('form'))
+
         user_id = current_user.id
         user = dbHandler.getUserById(user_id)
         fullname = f"{user.firstname} {user.lastname}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
         dbHandler.insertDevlog(title, body, fullname, user_id, current_date)
+        app_log.info("New log created by %s: %s", user_id, title)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
 
@@ -216,6 +227,7 @@ def logout():
     Logout for logged in
     '''
     logout_user()
+    flash("You have been logged out.", "info")
     return redirect('/index.html')
 
 
@@ -275,7 +287,7 @@ def deleteLog():
 
 @app.route('/download_data', methods=['GET'])
 @login_required
-#@limiter.limit("5 per day")
+@limiter.limit("5 per day")
 def downloadUser():
     '''
     Download user data as JSON

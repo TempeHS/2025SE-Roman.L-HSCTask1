@@ -24,10 +24,10 @@
         <form action="/index.html" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input name="email" type="email" class="form-control mb-3"
-                pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$" placeholder="name@example.com">
-            <input type="password" name="password" class="form-control mb-3" placeholder="Password" required />
-            <input type="checkbox" name="remember" class="mb-3"> Remember Me
-            <button type="submit" class="btn btn-dark w-100">Login</button>
+                pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$" autocomplete="off" placeholder="name@example.com">
+            <input type="password" name="password" class="form-control mb-3" id="password" placeholder="Password" required />
+            <input type="checkbox" class="mb-3 id="remember" aria-label="Remember me"> Remember Me
+            <button type="submit" id="login" class="btn btn-dark w-100">Login</button>
         </form>
         <div class="text-center mt-3 d-flex align-items-center justify-content-center">
             <p class="text-muted mb-0 me-2">Not a member?</p>

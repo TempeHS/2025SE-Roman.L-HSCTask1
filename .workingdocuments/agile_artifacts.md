@@ -36,16 +36,18 @@
 
 ## Sprint Review (Focus on project management)
 
-- 
+- Sidetracked like before
 
 ### What challenges did you have
 
-- 
+- CSP issues
+
+- TinyMCE not working (when using CDN)
 
 ### What did you do well
 
-- 
+- Clear acceptance criteria
 
 ### What will you do differently next time
 
-- 
+- Catching exceptions, more logging

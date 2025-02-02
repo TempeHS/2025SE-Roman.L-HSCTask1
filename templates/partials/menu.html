@@ -1,7 +1,7 @@
 {% if current_user.is_authenticated %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#"> </a>
+    <a class="navbar-brand" href="#">image</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
       aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -10,35 +10,40 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="/index.html"><img
-              src="{{ url_for('static', filename='icons/home.svg') }}" alt="Home" width="24" height="20" style="padding-right: 4px;">Home</a>
+              src="{{ url_for('static', filename='icons/home.svg') }}" alt="Home" width="24" height="20" class="icon">Home</a>
         </li>
         <li class="nav-item">
         </li>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/form.html"><img src="{{ url_for('static', filename='icons/plus-square.svg') }}"
-              alt="Create" width="24" height="20" style="padding-right: 4px;">Create</a>
+              alt="Create" width="24" height="20" class="icon">Create</a>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Settings" width="24" height="20" style="padding-right: 4px;">Settings</a>
+            <img src="{{ url_for('static', filename='icons/settings.svg') }}" alt="Settings" width="24" height="20" class="icon">Settings</a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="#">Two-step verification</a></li>
             <li><a class="dropdown-item" href="/download_data?user_id={{ current_user.id }}">Download user data</a></li>
+            <li>
             <form action="{{ url_for('deleteUser') }}" method="POST"
               onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.')">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="dropdown-item">Delete Account</button>
             </form>
+            </li>
             <li>
               <hr class="dropdown-divider" />
             </li>
-            <form action="/logout" method="post">
+            <li>
+            <form action="/logout" method="POST"
+            onsubmit="return confirm('Are you sure you want to logout?')">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               <button type="submit" class="dropdown-item text-danger"><img
-                  src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Logout" width="24" height="20" style="padding-right: 4px;">
+                  src="{{ url_for('static', filename='icons/log-out.svg') }}" alt="Logout" width="24" height="20" class="icon">
                 Logout</button>
             </form>
+          </li>
         </li>
       </ul>
       </li>
