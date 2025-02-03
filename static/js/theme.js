@@ -3,7 +3,7 @@ document.getElementById('flexSwitchCheckChecked').checked = document.body.datase
 
 // bootstrap dark mode
 function darkMode() {
-    const newTheme = document.body.dataset.bsTheme == "dark" ? "light" : "dark";
+    const newTheme = document.body.dataset.bsTheme === "dark" ? "light" : "dark";
     document.body.dataset.bsTheme = newTheme;
     localStorage.setItem('theme', newTheme);
     document.getElementById('flexSwitchCheckChecked').checked = newTheme === 'dark';

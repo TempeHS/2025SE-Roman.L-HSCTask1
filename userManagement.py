@@ -5,7 +5,6 @@ import random
 from datetime import datetime, timedelta
 from flask import flash, redirect, url_for
 from flask_login import UserMixin
-from src import sanitize_and_validate as sv, password_hashing as psh
 
 
 class User(UserMixin):
@@ -17,10 +16,6 @@ class User(UserMixin):
 
 ## User related functions
 def insertUser(email, password, firstname, lastname):
-    password = psh.hashPassword(password)
-
-    if userExists(email):
-        return False
     con = sql.connect(".databaseFiles/database.db")
     cur = con.cursor()
     cur.execute("INSERT INTO users (email, password, firstname, lastname, lastactivity) VALUES (?,?,?,?,?)", (email, password, firstname, lastname, datetime.now()))
@@ -93,14 +88,12 @@ def mapDevlogRows(data):
         'id': row[0],
         'user_id': row[1],
         'title': row[2],
-        'body': html.unescape(row[3]),
+        'body': row[3],
         'date': row[4],
         'fullname': row[5]
     } for row in data]
 
-def insertDevlog(title: str, body: str, fullname: str, user_id: int, date: str) -> None:
-    safe_title = html.escape(title)
-    safe_body = html.escape(body)
+def insertDevlog(safe_title: str, safe_body: str, fullname: str, user_id: int, date: str):
     con = sql.connect(".databaseFiles/database.db")
     cur = con.cursor()
     cur.execute("INSERT INTO developer_log (title, body, user_id, date, fullname) VALUES (?, ?, ?, ?, ?)",(safe_title, safe_body, user_id, date, fullname))
@@ -135,8 +128,7 @@ def listDevlogs() -> list:
     return mapDevlogRows(data)
 
 ## Devlog query functions
-def searchByDeveloper(query):
-    safe_query = sv.sanitizeQuery(query)
+def searchByDeveloper(safe_query):
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
     cur.execute("SELECT * FROM developer_log WHERE fullname LIKE ?", (f'%{safe_query}%',))
@@ -144,8 +136,7 @@ def searchByDeveloper(query):
     con.close()
     return mapDevlogRows(data)
 
-def searchByDate(query):
-    safe_query = sv.sanitizeQuery(query)
+def searchByDate(safe_query):
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
     cur.execute("SELECT * FROM developer_log WHERE date LIKE ?", (f'%{safe_query}%',))
@@ -153,8 +144,7 @@ def searchByDate(query):
     con.close()
     return mapDevlogRows(data)
 
-def searchByContent(query):
-    safe_query = sv.sanitizeQuery(query)
+def searchByContent(safe_query):
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ?", (f'%{safe_query}%', f'%{safe_query}%'))
@@ -162,8 +152,7 @@ def searchByContent(query):
     con.close()
     return mapDevlogRows(data)
 
-def searchAll(query):
-    safe_query = sv.sanitizeQuery(query)
+def searchAll(safe_query):
     con = sql.connect('.databaseFiles/database.db')
     cur = con.cursor()
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ? OR fullname LIKE ? OR date LIKE ?", (f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%'))

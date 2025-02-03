@@ -1,16 +1,13 @@
 # Standard Library Imports
-import os
 import ssl # SSL context
 import time
+import html
 import random
-import logging
 from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse, urljoin # URL parsing
 
 # Third-Party Imports
-import requests
 from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash
-from django.utils.http import url_has_allowed_host_and_scheme
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
@@ -153,13 +150,16 @@ def signup():
             print("Invalid name format")
             return redirect(url_for('signup'))
 
+        password = psh.hashPassword(password)
+        firstname = firstname.capitalize()
+        lastname = lastname.capitalize()
         dbHandler.insertUser(email, password, firstname, lastname)
         return render_template("/index.html")
     return render_template("/signup.html")
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-# @limiter.limit("5 per day")
+@limiter.limit("15 per day")
 @sst.logout_required
 def login():
     '''
@@ -167,9 +167,10 @@ def login():
     '''
     if request.method == "GET" and request.args.get("url"):
         target = request.args.get('url', '')
-        if url_has_allowed_host_and_scheme(target, allowed_hosts=None):
+        target = target.replace('\\', '')
+        if is_safe_url(target):
             return redirect(target, code=302)
-        return redirect('/', code=302)
+        return redirect('/dashboard', code=302)
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -204,11 +205,14 @@ def form():
         if not sv.validateLog(title, body):
             return redirect(url_for('form'))
 
+        safe_title = html.escape(title)
+        safe_body = sv.sanitizeLog(body)
+
         user_id = current_user.id
         user = dbHandler.getUserById(user_id)
         fullname = f"{user.firstname} {user.lastname}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        dbHandler.insertDevlog(title, body, fullname, user_id, current_date)
+        dbHandler.insertDevlog(safe_title, safe_body, fullname, user_id, current_date)
         app_log.info("New log created by %s: %s", user_id, title)
         return redirect(url_for('dashboard'))
     return render_template("/form.html")
@@ -243,15 +247,16 @@ def search():
     Search developer logs for logged in
     '''
     query = request.args.get('query', '')
+    safe_query = sv.sanitizeQuery(query)
     filter_type = request.args.get('filter', 'all')
     if filter_type == 'developer':
-        logs = dbHandler.searchByDeveloper(query)
+        logs = dbHandler.searchByDeveloper(safe_query)
     elif filter_type == 'date':
-        logs = dbHandler.searchByDate(query)
+        logs = dbHandler.searchByDate(safe_query)
     elif filter_type == 'content':
-        logs = dbHandler.searchByContent(query)
+        logs = dbHandler.searchByContent(safe_query)
     else:
-        logs = dbHandler.searchAll(query)
+        logs = dbHandler.searchAll(safe_query)
     return render_template('dashboard.html', logs=logs)
 
 
@@ -343,4 +348,4 @@ context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=443)
+    app.run(debug=True, host="0.0.0.0", port=443, ssl_context=context)

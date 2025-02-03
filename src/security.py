@@ -1,7 +1,3 @@
-from flask_wtf import CSRFProtect
-
-csrf = CSRFProtect()
-
 def init_security(app):
     """
     Initialize security-related configurations for the Flask app.
