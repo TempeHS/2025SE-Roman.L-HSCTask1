@@ -18,12 +18,10 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 from src.config import app_log
-from src.security import init_security
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
 
 app = Flask(__name__)
-init_security(app)
 
 # CSRF
 # app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
@@ -42,6 +40,15 @@ app.config.update(
     REMEMBER_COOKIE_SAMESITE='Lax',
     REMEMBER_COOKIE_DURATION=timedelta(days=30)
 )
+
+@app.after_request
+def add_cache_control(response):
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    return response
 
 # New login manager
 login_manager = LoginManager()
@@ -159,7 +166,7 @@ def signup():
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-@limiter.limit("15 per day")
+@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
@@ -237,8 +244,11 @@ def logout():
     '''
     logout_user()
     flash("You have been logged out.", "info")
-    return redirect('/index.html')
-
+    response = redirect('/index.html')
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.route('/search')
 @login_required
@@ -348,4 +358,4 @@ context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=443, ssl_context=context)
+    app.run(debug=True, host="127.0.0.1", port=443, ssl_context=context)

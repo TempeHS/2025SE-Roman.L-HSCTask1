@@ -1,4 +1,4 @@
-document.body.dataset.bsTheme = localStorage.getItem('theme') || 'dark';
+document.body.dataset.bsTheme = localStorage.getItem('theme') || 'light';
 document.getElementById('flexSwitchCheckChecked').checked = document.body.dataset.bsTheme === 'dark'
 
 // bootstrap dark mode

@@ -25,7 +25,7 @@
 <div class="login-container">
     <div class="login-card">
         <h3 class="login-title">Signup</h3>
-        <form action="/signup.html" method="POST">
+        <form action="{{ url_for('signup') }}" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <div class="row">
                 <div class="col-md-6"><input type="text" name="firstname"
@@ -42,7 +42,8 @@
                 class="form-control mb-3" placeholder="Password"
                 required minlength="8"
                 pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$"
-                title="Password must be at least 8 characters long and contain at least one letter and one number." />
+                title="Password must be at least 8 characters long and contain at least one letter and one number." 
+                autocomplete="current-password"/>
             <div class="mb-3">
                 <small id="password-requirements" class="form-text text-muted">
                     Password must be at least 8 characters long and contain at
@@ -55,7 +56,7 @@
         <div
             class="text-center mt-3 d-flex align-items-center justify-content-center">
             <p class="text-muted mb-0 me-2">Already have an account?</p>
-            <a href="index.html">Login</a>
+            <a href="{{ url_for('login') }}">Login</a>
         </div>
     </div>
 </div>
