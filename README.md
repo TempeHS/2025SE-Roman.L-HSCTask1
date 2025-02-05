@@ -28,7 +28,7 @@
 <pre>cd 2025SE-Roman.L-HSCTask1</pre>
    
 2. Gather dependencies
-<pre>pip install -r requirements</pre>
+<pre>pip install -r requirements.txt</pre>
 
 2. Deploy live server (port: 5000)
 <pre>python main.py</pre>
