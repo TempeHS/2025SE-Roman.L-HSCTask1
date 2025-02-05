@@ -19,16 +19,16 @@
 
 ## Sprint Review (Focus on project management)
 
-- 
+- Many changes
 
 ### What challenges did you have
 
-- 
+- HTTPS Not working
 
 ### What did you do well
 
--
+- User experience
 
 ### What will you do differently next time
 
--
+- Have stricter deadlines

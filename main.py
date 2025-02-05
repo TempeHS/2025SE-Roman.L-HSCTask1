@@ -15,12 +15,15 @@ from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user # Login manager
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 
 # Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 from src.config import app_log
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -29,8 +32,7 @@ def generate_nonce():
     g.nonce = os.urandom(16).hex()
 
 # CSRF
-# app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
-app.secret_key =  b"f53oi3uriq9pifpff;apl"
+app.secret_key =  os.getenv('secret_key')
 csrf = CSRFProtect(app)
 
 scheduler = BackgroundScheduler()
@@ -51,6 +53,8 @@ def add_cache_control(response):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    
+    # Disable Cache
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -176,7 +180,7 @@ def signup():
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-@limiter.limit("5 per day")
+#@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
