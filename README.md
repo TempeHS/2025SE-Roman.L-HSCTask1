@@ -1,57 +1,35 @@
-# Secure Flask Bootstrap PWA Template
-
-This Flask template has been built from the ground up to be a secure Progressive Web App. It includes a secure form and Bootstrap sample components ready to be connected to a SQLite3 database. All minimum PWA standards have been integrated, and placeholder images have been provided for all the icon and image components.
-
-## Dependencies
-
-- VSCode or GitHub Codespaces (preconfigured for docker)
-- Python 3+
-- pip install Flask
-- pip install SQLite3
-- pip install bcrypt
-- pip install flask_wtf
-
+[![Python Version](https://img.shields.io/badge/python-3.12.2-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-3122/)
+# 2025 Developer Log
+**CONTACT FOR ENQUIRIES: roman.lacbungan@education.nsw.gov.au**
+## Screenshots
 ## Secure Features
 
 - Strict Content Security Policy
   - No inline `<script></script>`.
   - Restricted `<iframe>` loading
   - CORS JS blocked
-- HTML Languaged declared.
-- Meta character set declared.
-- Private folders use .folderName syntax.
-- [Bootstrap 5.3](https://getbootstrap.com/) components served local files.
-- CSRFProtect applied to form.
-- Form Pattern expression declared.
+- Automatic account deletion after 6+ months
+- Enforces an 8 character minimum password with letters and numbers
+- User data can be downloaded and deleted through settings
+- Passwords are hashed with randomised cryptography
+- Secure session handling with Flask
+- Strict input sanitization and validation
+- App logging and alerts for suspicious activities
+- SSL and HTTPS support
 
-## To be implemented by developers
+## Installation
+1. Clone repository
+<pre>git clone https://github.com/TempeHS/2025SE-Roman.L-HSCTask1</pre>
 
-- Web content, [Bootstrap 5.3](https://getbootstrap.com/) ready
-- [SQLite](https://docs.python.org/3/library/sqlite3.html) database design and integration
-- Input sanitisation
-- Login, authentication or session management
-- Password encryption using [bcrypt](https://pypi.org/project/bcrypt/)
-- SSL Encryption
+2. Check directory
+<pre>cd 2025SE-Roman.L-HSCTask1</pre>
+   
+2. Gather dependencies
+<pre>pip install -r requirements</pre>
 
-## Privacy advice for developers
+2. Deploy live server (port: 5000)
+<pre>python main.py</pre>
 
-- The app should have a privacy handling policy
-- Only data essential for the app should be collected
-- Users should be given the option to download or delete their data
-- Passwords should be encrypted, including a salt, before hashing
-
-## Security advice for developers
-
-- All inputs should be sanitised before processing or storing
-- If including login, authentication and session management should be implemented
-- SSL Encryption and HTTPS should be implemented
-- Use Jinga2 components when passing variables to the frontend
-- Use query parameters for all SQL queries
-
-## Content advice for developers
-
-- All templates are [Bootstrap 5.3](https://getbootstrap.com/) ready
-- [SQLite](https://docs.python.org/3/library/sqlite3.html) has been provided for database design
-
-> [!TIP]
-> Developers should [monitor Bootstrap 5.3.3 for discovered vulnerabilities](https://security.snyk.io/package/npm/bootstrap) and patch or update as needed.
+Once deployed, the app can be accessed on either:
+- http://localhost:5000
+- http://127.0.0.1:5000
