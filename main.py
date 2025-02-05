@@ -26,6 +26,8 @@ from userManagement import User # User management
 
 load_dotenv()
 
+VALID_REDIRECT = "http://dashboard.html"
+
 app = Flask(__name__)
 init_security(app)
 
@@ -179,9 +181,8 @@ def login():
     if request.method == "GET" and request.args.get("url"):
         target = request.args.get('url', '')
         target = target.replace('\\', '')
-        if is_safe_url(target):
+        if target == VALID_REDIRECT:
             return redirect(target, code=302)
-        return redirect('/dashboard', code=302)
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -361,4 +362,4 @@ context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
-    app.run(debug=debug_mode, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5000)
