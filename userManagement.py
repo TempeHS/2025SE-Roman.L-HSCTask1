@@ -2,9 +2,26 @@ import sqlite3 as sql
 import time
 import random
 from datetime import datetime, timedelta
-from flask import flash, redirect, url_for
+from flask import flash, redirect, url_for, g
 from flask_login import UserMixin
+from flask import Flask
 
+app = Flask(__name__)
+
+DATABASE = '.databaseFiles/database.db'
+
+# Reusable connection
+def get_db():
+    if 'db' not in g:
+        g.db = sql.connect(DATABASE)
+        g.db.row_factory = sql.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 class User(UserMixin):
     def __init__(self, user_id, email, firstname, lastname):
@@ -15,39 +32,38 @@ class User(UserMixin):
 
 ## User related functions
 def insertUser(email, password, firstname, lastname):
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("INSERT INTO users (email, password, firstname, lastname, lastactivity) VALUES (?,?,?,?,?)", (email, password, firstname, lastname, datetime.now()))
-    con.commit()
-    con.close()
+    db.commit()
     return True
 
 
 def userExists(email: str) -> bool:
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT email FROM users WHERE email = ?", (email,))
     exists = cur.fetchone() is not None
-    con.close()
+    db.commit()
     return exists
 
 
 def retrieveUsers(email: str) -> tuple:
     time.sleep(random.uniform(0.1, 0.2))
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT id, email, password, firstname, lastname FROM users WHERE email = ?", (email,))
     user = cur.fetchone()
-    con.close()
+    db.commit()
     return user if user else False
 
 
 def getUserById(user_id):
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     user = cur.fetchone()
-    con.close()
+    db.commit()
     if user:
         return User(user[0], user[1], user[3], user[4])
     return user
@@ -55,11 +71,10 @@ def getUserById(user_id):
 
 def deleteUserById(user_id):
     try:
-        con = sql.connect(".databaseFiles/database.db")
-        cur = con.cursor()
+        db = get_db()
+        cur = db.cursor()
         cur.execute("DELETE FROM users WHERE id = ?", (user_id,))
-        con.commit()
-        con.close()
+        db.commit()
         return True
     except Exception as e:
         print(f"Error deleting user: {e}")
@@ -67,19 +82,17 @@ def deleteUserById(user_id):
         return False
 
 def deleteUserByInactivity():
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cutoff_date = datetime.now() - timedelta(days=180)
     cur.execute("DELETE FROM users WHERE last_activity < ?", (cutoff_date,))
-    con.commit()
-    con.close()
+    db.commit()
 
 def updateLastActivity(user_id):
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("UPDATE users SET lastactivity = ? WHERE id = ?", (datetime.now(), user_id))
-    con.commit()
-    con.close()
+    db.commit()
 
 ## Devlog related functions
 def mapDevlogRows(data):
@@ -93,11 +106,10 @@ def mapDevlogRows(data):
     } for row in data]
 
 def insertDevlog(safe_title: str, safe_body: str, fullname: str, user_id: int, date: str):
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("INSERT INTO developer_log (title, body, user_id, date, fullname) VALUES (?, ?, ?, ?, ?)",(safe_title, safe_body, user_id, date, fullname))
-    con.commit()
-    con.close()
+    db.commit()
 
 def deleteLogs(user_id, log_id):
     try:
@@ -120,41 +132,41 @@ def deleteLogs(user_id, log_id):
     return redirect(url_for('dashboard'))
 
 def listDevlogs() -> list:
-    con = sql.connect(".databaseFiles/database.db")
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     data = cur.execute("SELECT * FROM developer_log").fetchall()
-    con.close()
+    db.commit()
     return mapDevlogRows(data)
 
 ## Devlog query functions
 def searchByDeveloper(safe_query):
-    con = sql.connect('.databaseFiles/database.db')
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT * FROM developer_log WHERE fullname LIKE ?", (f'%{safe_query}%',))
     data = cur.fetchall()
-    con.close()
+    db.commit()
     return mapDevlogRows(data)
 
 def searchByDate(safe_query):
-    con = sql.connect('.databaseFiles/database.db')
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT * FROM developer_log WHERE date LIKE ?", (f'%{safe_query}%',))
     data = cur.fetchall()
-    con.close()
+    db.commit()
     return mapDevlogRows(data)
 
 def searchByContent(safe_query):
-    con = sql.connect('.databaseFiles/database.db')
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ?", (f'%{safe_query}%', f'%{safe_query}%'))
     data = cur.fetchall()
-    con.close()
+    db.commit()
     return mapDevlogRows(data)
 
 def searchAll(safe_query):
-    con = sql.connect('.databaseFiles/database.db')
-    cur = con.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute("SELECT * FROM developer_log WHERE title LIKE ? OR body LIKE ? OR fullname LIKE ? OR date LIKE ?", (f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%', f'%{safe_query}%'))
     data = cur.fetchall()
-    con.close()
+    db.commit()
     return mapDevlogRows(data)

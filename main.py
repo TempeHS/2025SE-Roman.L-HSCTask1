@@ -14,7 +14,6 @@ from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user # Login manager
-from flask_talisman import Talisman
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # Local Application Imports
@@ -42,9 +41,7 @@ scheduler.start()
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    REMEMBER_COOKIE_SAMESITE='Lax',
-    REMEMBER_COOKIE_DURATION=timedelta(days=30)
+    SESSION_COOKIE_HTTPONLY=True
 )
 
 @app.after_request
@@ -194,13 +191,12 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        remember = request.form.get("remember") == "on"
 
         # Validate user input
         user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
             user_obj = User(user[0], user[1], user[3], user[4])
-            login_user(user_obj, remember=remember)
+            login_user(user_obj)
             time.sleep(random.uniform(0.1, 0.2))
             app_log.info("Successful login: %s", email)
             dbHandler.updateLastActivity(user[0])
