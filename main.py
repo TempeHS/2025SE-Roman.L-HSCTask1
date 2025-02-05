@@ -32,6 +32,8 @@ def generate_nonce():
     g.nonce = os.urandom(16).hex()
 
 # CSRF
+# If .env does not load try:
+# app.secret_key =   b"f53oi3uriq9pifpff;apl"
 app.secret_key =  os.getenv('secret_key')
 csrf = CSRFProtect(app)
 
