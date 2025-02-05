@@ -1,37 +1,23 @@
 {% extends 'layout.html' %}
 {% block content %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
-            {% for category, message in messages %}
-                <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'error' else 'success' }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            {{ message }}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-{% endwith %}
-
 <div class="login-container">
     <div class="login-card">
         <h3 class="login-title">Login</h3>
-        <form action="/index.html" method="post">
+        <form action="{{ url_for('login') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input name="email" type="email" class="form-control mb-3"
-                pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$" autocomplete="off" placeholder="name@example.com">
-            <input type="password" name="password" class="form-control mb-3" id="password" placeholder="Password" required />
-            <input type="checkbox" class="mb-3 id="remember" aria-label="Remember me"> Remember Me
-            <button type="submit" id="login" class="btn btn-dark w-100">Login</button>
+                pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$"
+                autocomplete="email" placeholder="name@example.com">
+            <input type="password" name="password" class="form-control mb-3"
+                autocomplete="new-password" id="password" placeholder="Password" required />
+            <button type="submit" id="login"
+                class="btn btn-dark w-100">Login</button>
         </form>
-        <div class="text-center mt-3 d-flex align-items-center justify-content-center">
+        <div
+            class="text-center mt-3 d-flex align-items-center justify-content-center">
             <p class="text-muted mb-0 me-2">Not a member?</p>
-            <a href="signup.html">Signup</a>
+            <a href="{{ url_for('signup') }}">Signup</a>
         </div>
     </div>
 </div>

@@ -8,15 +8,17 @@
 
 <div class="container">
   <div class="row">
-    <form action="/form.html" method="POST" class="box">
+    <form action="{{ url_for('form') }}" method="POST" class="box" onsubmit="return validateForm()">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="col-auto">
         <label for="titleInput" class="form-label">Project</label>
-        <input name="title" type="text" class="form-control" id="titleInput" placeholder="Project Name" required maxlength="64">
+        <input name="title" type="text" class="form-control" id="titleInput"
+          placeholder="Project Name" required maxlength="64">
       </div>
       <div class="col-auto">
         <label for="bodyText" class="form-label">Log Content</label>
-        <textarea class="form-control" name="body" id="bodyText" rows="5" required></textarea>
+        <textarea class="form-control" name="body" id="bodyText"
+          ></textarea>
       </div>
       <br />
       <div class="col-auto">
@@ -25,21 +27,6 @@
     </form>
   </div>
 </div>
-
-<script src="/static/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
-<script>
-tinymce.init({
-  selector: '#bodyText',
-  license_key: 'gpl',
-  height: 400,
-  plugins: 'advlist autolink lists link image charmap preview anchor',
-  toolbar: 'undo redo | formatselect | bold italic | bullist numlist | outdent indent',
-  menubar: false,
-  setup: function(editor) {
-    editor.on('change', function () {
-      document.getElementById('bodyText').value = editor.getContent();
-    });
-  },
-});
-</script>
+<script nonce="{{ nonce }}" src="/static/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="{{ url_for('static', filename='js/tinymce-init.js') }}" nonce="{{ nonce }}"></script>
 {% endblock %}

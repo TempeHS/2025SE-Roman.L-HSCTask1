@@ -1,36 +1,40 @@
 # Standard Library Imports
 import os
-import ssl # SSL context
+import ssl
 import time
+import html
 import random
-import logging
 from datetime import datetime, timedelta # Date and time
 from urllib.parse import urlparse, urljoin # URL parsing
 
 # Third-Party Imports
-import requests
-from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash
-from django.utils.http import url_has_allowed_host_and_scheme
+from flask import Flask, redirect, render_template, request, session, url_for, jsonify, flash, g
 from flask_wtf import CSRFProtect
 from flask_csp.csp import csp_header
 from flask_limiter import Limiter # Rate limiter
 from flask_limiter.util import get_remote_address # Rate limiter
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user # Login manager
 from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 
 # Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 from src.config import app_log
-from src.security import init_security
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
 
+load_dotenv()
+
 app = Flask(__name__)
-init_security(app)
+
+@app.before_request
+def generate_nonce():
+    g.nonce = os.urandom(16).hex()
 
 # CSRF
-# app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(32))
-app.secret_key =  b"f53oi3uriq9pifpff;apl"
+# If .env does not load try:
+# app.secret_key =   b"f53oi3uriq9pifpff;apl"
+app.secret_key =  os.getenv('secret_key')
 csrf = CSRFProtect(app)
 
 scheduler = BackgroundScheduler()
@@ -41,12 +45,37 @@ scheduler.start()
 app.permanent_session_lifetime = timedelta(days=30)
 app.config.update(
     SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    REMEMBER_COOKIE_SAMESITE='Lax',
-    REMEMBER_COOKIE_DURATION=timedelta(days=30)
+    SESSION_COOKIE_HTTPONLY=True
 )
 
-# New login manager
+@app.after_request
+def add_cache_control(response):
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    
+    # Disable Cache
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+# Default rate limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "100 per hour"],
+    storage_uri="memory://",
+)
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    flash("Rate limit exceeded. Please try again later.", "error")
+    return redirect(url_for('index'))
+
+# Login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -57,14 +86,6 @@ def load_user(user_id):
     Load user by IDs
     '''
     return dbHandler.getUserById(user_id)
-
-# Default rate limiter
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "100 per hour"],
-    storage_uri="memory://",
-)
 
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
@@ -80,21 +101,20 @@ def is_safe_url(target):
 def root():
     return redirect("/", 302)
 
-
 @app.route("/", methods=["POST", "GET"])
 @csp_header(
     {
         # Server Side CSP is consistent with meta CSP in layout.html
         "base-uri": "'self'",
         "default-src": "'self'",
-        "style-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
-        "script-src": "'self' 'unsafe-inline' https://cdn.tiny.cloud",
-        "img-src": "'self' data: https://sp.tinymce.com",
+        "style-src": "'self' 'nonce-{{ g.nonce }}'",
+        "script-src": "'self' 'nonce-{{ g.nonce }}'",
+        "img-src": "'self' data:",
         "media-src": "'self'",
         "font-src": "'self'",
         "object-src": "'self'",
         "child-src": "'self'",
-        "connect-src": "'self' https://cdn.tiny.cloud",
+        "connect-src": "'self'",
         "worker-src": "'self'",
         "report-uri": "/csp_report",
         "frame-ancestors": "'none'",
@@ -102,7 +122,6 @@ def root():
         "frame-src": "'none'"
     }
 )
-
 
 @sst.logout_required
 def index():
@@ -121,6 +140,7 @@ def privacy():
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
+@limiter.limit("5 per day")
 @sst.logout_required
 def signup():
     '''
@@ -153,13 +173,16 @@ def signup():
             print("Invalid name format")
             return redirect(url_for('signup'))
 
+        password = psh.hashPassword(password)
+        firstname = firstname.capitalize()
+        lastname = lastname.capitalize()
         dbHandler.insertUser(email, password, firstname, lastname)
         return render_template("/index.html")
     return render_template("/signup.html")
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-# @limiter.limit("5 per day")
+#@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
@@ -167,18 +190,19 @@ def login():
     '''
     if request.method == "GET" and request.args.get("url"):
         target = request.args.get('url', '')
-        if url_has_allowed_host_and_scheme(target, allowed_hosts=None):
+        target = target.replace('\\', '')
+        if is_safe_url(target):
             return redirect(target, code=302)
-        return redirect('/', code=302)
+        return redirect('/dashboard', code=302)
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        remember = request.form.get("remember") == "on"
 
+        # Validate user input
         user = dbHandler.retrieveUsers(email)
         if user and psh.verifyPassword(password, user[2]):
             user_obj = User(user[0], user[1], user[3], user[4])
-            login_user(user_obj, remember=remember)
+            login_user(user_obj)
             time.sleep(random.uniform(0.1, 0.2))
             app_log.info("Successful login: %s", email)
             dbHandler.updateLastActivity(user[0])
@@ -192,6 +216,7 @@ def login():
 
 
 @app.route("/form.html", methods=["GET", "POST"])
+@limiter.limit("5 per day")
 @login_required
 def form():
     '''
@@ -203,15 +228,18 @@ def form():
 
         if not sv.validateLog(title, body):
             return redirect(url_for('form'))
+        safe_title = html.escape(title)
+        safe_body = sv.sanitizeLog(body)
 
         user_id = current_user.id
         user = dbHandler.getUserById(user_id)
         fullname = f"{user.firstname} {user.lastname}"
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-        dbHandler.insertDevlog(title, body, fullname, user_id, current_date)
+        dbHandler.insertDevlog(safe_title, safe_body, fullname, user_id, current_date)
         app_log.info("New log created by %s: %s", user_id, title)
         return redirect(url_for('dashboard'))
-    return render_template("/form.html")
+    nonce = g.get("nonce", "")
+    return render_template("/form.html", nonce=nonce)
 
 
 @app.route("/dashboard.html", methods=["GET", "POST"])
@@ -235,7 +263,6 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect('/index.html')
 
-
 @app.route('/search')
 @login_required
 def search():
@@ -243,15 +270,16 @@ def search():
     Search developer logs for logged in
     '''
     query = request.args.get('query', '')
+    safe_query = sv.sanitizeQuery(query)
     filter_type = request.args.get('filter', 'all')
     if filter_type == 'developer':
-        logs = dbHandler.searchByDeveloper(query)
+        logs = dbHandler.searchByDeveloper(safe_query)
     elif filter_type == 'date':
-        logs = dbHandler.searchByDate(query)
+        logs = dbHandler.searchByDate(safe_query)
     elif filter_type == 'content':
-        logs = dbHandler.searchByContent(query)
+        logs = dbHandler.searchByContent(safe_query)
     else:
-        logs = dbHandler.searchAll(query)
+        logs = dbHandler.searchAll(safe_query)
     return render_template('dashboard.html', logs=logs)
 
 
@@ -259,7 +287,7 @@ def search():
 @login_required
 def deleteUser():
     '''
-    Removes user from database
+    Removes current user from database
     '''
     user_id = current_user.id
     try:
@@ -339,8 +367,10 @@ def checkSessionTimeout():
             return redirect(url_for('login'))
         session['last_activity'] = datetime.now()
 
+## SSL Encryption
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=443)
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+    app.run(debug=debug_mode, host="127.0.0.1", port=5000)

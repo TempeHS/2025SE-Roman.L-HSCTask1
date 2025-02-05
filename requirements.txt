@@ -1,8 +1,8 @@
 Flask
-bcrypt
 flask-wtf
 flask-csp
 flask-limiter
 flask-login
+bcrypt
 APScheduler
-django==5.1.5
+bleach

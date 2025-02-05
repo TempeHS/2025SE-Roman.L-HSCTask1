@@ -2,52 +2,33 @@
 
 ## Sprint backlog list of achievables (annotate changes made during sprint, including data required)
 
-- ~~Log all failed login attempts and implement a failed login policy (Login rate limiting)~~
+- ~~Logging for user interactions~~
 
-- ~~Allow developers to search entries by developer, date, project or log/diary contents~~
+- ~~Update favicon~~
 
-- ~~SSL encryption~~
+- 2 factor authentication
 
-- ~~Automatic deletion for accounts inactive for 6+ months~~
-
-- ~~Download user data, manual deletion~~
-
-- ~~Remember me (session management)~~
-
-- ~~Password requirements~~
-
-- ~~Randomise operations and data access patterns for all cryptography processes~~
-
-- ~~Delete developer logs~~
-
-- ~~Dark mode theme~~
+- Limit to how many logs can appear on one page
 
 ## Increment (what must be achieved by the end of the sprint)
 
-- ~~Account is removed from database~~ as well as their logs
+- ~~W3C approved~~
 
-- ~~Failed login attempts are logged~~ and user is alerted after 3+ failed
+- Users can sign-in with 2 factor authentication
 
-- ~~Developer logs can be removed~~
-
-- ~~Dark mode theme throughout entire site~~
-
-- ~~Search bar for developer logs~~
 
 ## Sprint Review (Focus on project management)
 
-- Sidetracked like before
+- Many changes
 
 ### What challenges did you have
 
-- CSP issues
-
-- TinyMCE not working (when using CDN)
+- HTTPS Not working
 
 ### What did you do well
 
-- Clear acceptance criteria
+- User experience
 
 ### What will you do differently next time
 
-- Catching exceptions, more logging
+- Have stricter deadlines

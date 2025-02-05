@@ -6,7 +6,7 @@
 
 - ~~Developer log entries are time/date stamped~~
 
-- Application meets minimum WC3 PWA standards
+- ~~Application meets minimum WC3 PWA standards~~
 
 - ~~Allow developers to search entries by developer, date, project or log/diary contents~~
 
@@ -30,7 +30,7 @@
 
 - ~~SSL encryption~~
 
-- style.css
+- ~~style.css~~
 
 - Tags for search
 
@@ -48,4 +48,4 @@
 
 - ~~Password requirements~~
 
-- Update favicon
+- ~~Update favicon~~
