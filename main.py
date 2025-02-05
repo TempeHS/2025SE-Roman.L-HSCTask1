@@ -20,12 +20,14 @@ from dotenv import load_dotenv
 # Local Application Imports
 from src import sanitize_and_validate as sv, session_state as sst, password_hashing as psh # Custom modules
 from src.config import app_log
+from src.security import init_security
 import userManagement as dbHandler # Database functions
 from userManagement import User # User management
 
 load_dotenv()
 
 app = Flask(__name__)
+init_security(app)
 
 @app.before_request
 def generate_nonce():
@@ -47,20 +49,6 @@ app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True
 )
-
-@app.after_request
-def add_cache_control(response):
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-    
-    # Disable Cache
-    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
 
 # Default rate limiter
 limiter = Limiter(
