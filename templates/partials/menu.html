@@ -1,7 +1,9 @@
 {% if current_user.is_authenticated %}
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">image</a>
+    <a class="navbar-brand d-flex align-items-center" href="/dashboard.html">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" 
+        alt="Icon" width="24" height="24"></a>  
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
       data-bs-target="#navbarSupportedContent"
       aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -29,16 +31,21 @@
           <img src="{{ url_for('static', filename='icons/settings.svg') }}"
             alt="Settings" width="24" height="20" class="icon">Settings</a>
         <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="#">Two-step verification</a></li>
+          <li><a class="dropdown-item disabled" href="#"><img
+            src="{{ url_for('static', filename='icons/server.svg') }}"
+            alt="DeleteUser" width="24" height="20" class="icon">Two-step verification</a></li>
           <li><a class="dropdown-item"
-              href="/download_data?user_id={{ current_user.id }}">Download user
+              href="/download_data?user_id={{ current_user.id }}"><img
+              src="{{ url_for('static', filename='icons/user.svg') }}"
+              alt="DownloadUser" width="24" height="20" class="icon">Download user
               data</a></li>
           <li>
-            <form action="{{ url_for('deleteUser') }}" method="POST"
-              onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.')">
+            <form action="{{ url_for('deleteUser') }}" method="POST" class="deleteUser">
               <input type="hidden" name="csrf_token"
                 value="{{ csrf_token() }}" />
-              <button type="submit" class="dropdown-item">Delete
+              <button type="submit" class="dropdown-item"><img
+                src="{{ url_for('static', filename='icons/user-minus.svg') }}"
+                alt="DeleteUser" width="24" height="20" class="icon">Delete
                 Account</button>
             </form>
           </li>
@@ -46,14 +53,12 @@
             <hr class="dropdown-divider" />
           </li>
           <li>
-            <form action="/logout" method="POST"
-              onsubmit="return confirm('Are you sure you want to logout?')">
+            <form action="/logout" method="POST" class="logout">
               <input type="hidden" name="csrf_token"
                 value="{{ csrf_token() }}" />
               <button type="submit" class="dropdown-item text-danger"><img
                   src="{{ url_for('static', filename='icons/log-out.svg') }}"
-                  alt="Logout" width="24" height="20" class="icon">
-                Logout</button>
+                  alt="Logout" width="24" height="20" class="icon">Logout</button>
             </form>
           </li>
         </li>
@@ -64,4 +69,5 @@
     </li>
   </ul>
 </nav>
+<script src="{{ url_for('static', filename='js/menu.js') }}" nonce="{{ nonce }}"></script>
 {% endif %}

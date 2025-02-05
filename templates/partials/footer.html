@@ -5,12 +5,15 @@
     <div class="row">
         <div class="d-flex align-items-left gap-3">
             <a href="privacy.html">Privacy Policy</a>
-            <body data-bs-theme="dark">
+            <body data-bs-theme="light">
                 <div class="form-check form-switch mx-4">
+                    <img src="{{ url_for('static', filename='icons/sun.svg') }}"
+                        alt="Sun" width="24" height="20" class="icon me-2">
                     <input class="form-check-input p-2" type="checkbox"
-                        role="switch" id="flexSwitchCheckChecked" checked
-                        onclick="darkMode()" aria-label="Enable Dark Mode" />
+                        role="switch" id="flexSwitchCheckChecked"
+                        aria-label="Enable Dark Mode" />
                 </div>
             </div>
         </div>
     </div>
+<script src="{{ url_for('static', filename='js/theme.js') }}" nonce="{{ nonce }}"></script>

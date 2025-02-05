@@ -2,9 +2,9 @@
 
 ## Sprint backlog list of achievables (annotate changes made during sprint, including data required)
 
-- Logging for user interactions
+- ~~Logging for user interactions~~
 
-- Update favicon
+- ~~Update favicon~~
 
 - 2 factor authentication
 
@@ -12,7 +12,7 @@
 
 ## Increment (what must be achieved by the end of the sprint)
 
-- W3C approved
+- ~~W3C approved~~
 
 - Users can sign-in with 2 factor authentication
 

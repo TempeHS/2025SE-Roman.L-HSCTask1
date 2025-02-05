@@ -18,7 +18,7 @@
       <div class="col-auto">
         <label for="bodyText" class="form-label">Log Content</label>
         <textarea class="form-control" name="body" id="bodyText"
-          required style="pointer-events: none;"></textarea>
+          ></textarea>
       </div>
       <br />
       <div class="col-auto">
@@ -27,36 +27,6 @@
     </form>
   </div>
 </div>
-
-<script src="/static/tinymce/js/tinymce/tinymce.min.js"
-  referrerpolicy="origin"></script>
-<script>
-    function validateForm() {
-        if (!tinymce.get('bodyText')) {
-            alert('TinyMCE is not initialized.');
-            return false;
-        }
-        return true;
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const prefersDarkMode = document.body.dataset.bsTheme === 'dark';
-
-    tinymce.init({
-      selector: '#bodyText',
-      license_key: 'gpl',
-      height: 400,
-      plugins: 'advlist autolink lists link charmap preview anchor',
-      toolbar: 'undo redo | formatselect | bold italic | bullist numlist | outdent indent',
-      menubar: false,
-      skin: prefersDarkMode ? 'oxide-dark' : 'oxide',
-      content_css: prefersDarkMode ? 'dark' : 'default',
-      setup: function(editor) {
-        editor.on('change', function () {
-          document.getElementById('bodyText').value = editor.getContent();
-        });
-      },
-    });
-    });
-</script>
+<script nonce="{{ nonce }}" src="/static/tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="{{ url_for('static', filename='js/tinymce-init.js') }}" nonce="{{ nonce }}"></script>
 {% endblock %}
