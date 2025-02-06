@@ -360,4 +360,4 @@ context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
-    app.run(debug=False, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5000, ssl_context=None) # 'context' for HTTPS, SSL
