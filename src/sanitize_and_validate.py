@@ -61,16 +61,16 @@ def sanitizeLog(body):
     allowed_tags.update(['p', 'br', 'span', 'div', 'strong', 'em', 'ul', 'ol', 'li', 'blockquote', 'pre'])
     allowed_attributes = bleach.sanitizer.ALLOWED_ATTRIBUTES
     allowed_attributes.update({
-        'span': ['style'],
-        'div': ['style'],
-        'p': ['style'],
-        'strong': ['style'],
-        'em': ['style'],
-        'ul': ['style'],
-        'ol': ['style'],
-        'li': ['style'],
-        'blockquote': ['style'],
-        'pre': ['style'],
+        'span': [],
+        'div': [],
+        'p': [],
+        'strong': [],
+        'em': [],
+        'ul': [],
+        'ol': [],
+        'li': [],
+        'blockquote': [],
+        'pre': [],
     })
     safe_body = bleach.clean(body, tags=allowed_tags, attributes=allowed_attributes)
     return safe_body

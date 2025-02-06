@@ -75,11 +75,6 @@ def load_user(user_id):
     '''
     return dbHandler.getUserById(user_id)
 
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
-
 # Redirect index.html to domain root for consistent UX
 @app.route("/index", methods=["GET"])
 @app.route("/index.htm", methods=["GET"])
@@ -126,6 +121,13 @@ def privacy():
     '''
     return render_template("/privacy.html")
 
+def is_safe_url(target):
+    ALLOWED_URLS = ['/', '/dashboard', '/index.html']
+    parsed_url = urlparse(target)
+    if parsed_url.netloc == '' and parsed_url.path in ALLOWED_URLS:
+        return True
+    return False
+
 
 @app.route("/signup.html", methods=["GET", "POST"])
 @limiter.limit("5 per day")
@@ -134,11 +136,10 @@ def signup():
     '''
     Signup page for new users
     '''
-    ALLOWED_URLS = ['/', '/dashboard', '/index.html']
     if request.method == "GET" and request.args.get("url"):
-        url = request.args.get("url", "").replace('\\', '/')
-        if url in ALLOWED_URLS:
-            return redirect(url, code=302)
+        target = request.args.get('url', '').strip()
+        if is_safe_url(target):
+            return redirect(target, code=302)
         return redirect('/', code=302)
     if request.method == "POST":
         email = request.form["email"]
@@ -170,17 +171,15 @@ def signup():
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-@limiter.limit("5 per day")
+@limiter.limit("10 per day")
 @sst.logout_required
 def login():
     '''
     Login page for new users
     '''
-    ALLOWED_URLS = ['/', '/dashboard', '/index.html']
     if request.method == "GET" and request.args.get("url"):
-        target = request.args.get('url', '')
-        target = target.replace('\\', '')
-        if target in ALLOWED_URLS:
+        target = request.args.get('url', '').strip()
+        if is_safe_url(target):
             return redirect(target, code=302)
     if request.method == "POST":
         email = request.form["email"]
