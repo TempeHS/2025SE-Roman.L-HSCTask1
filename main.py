@@ -170,7 +170,7 @@ def signup():
 
 
 @app.route("/index.html", methods=["GET", "POST"])
-#@limiter.limit("5 per day")
+@limiter.limit("5 per day")
 @sst.logout_required
 def login():
     '''
@@ -226,8 +226,7 @@ def form():
         dbHandler.insertDevlog(safe_title, safe_body, fullname, user_id, current_date)
         app_log.info("New log created by %s: %s", user_id, title)
         return redirect(url_for('dashboard'))
-    nonce = g.get("nonce", "")
-    return render_template("/form.html", nonce=nonce)
+    return render_template("/form.html")
 
 
 @app.route("/dashboard.html", methods=["GET", "POST"])
@@ -361,4 +360,4 @@ context.load_cert_chain('certs/certificate.pem', 'certs/privatekey.pem')
 
 if __name__ == "__main__":
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=False, host="127.0.0.1", port=5000)
