@@ -55,7 +55,7 @@ def sanitizeQuery(query):
         return query[:255]
     return query
 
-
+# TinyMCE already has sanitisation
 def sanitizeLog(body):
     allowed_tags = set(bleach.sanitizer.ALLOWED_TAGS)
     allowed_tags.update(['p', 'br', 'span', 'div', 'strong', 'em', 'ul', 'ol', 'li', 'blockquote', 'pre'])

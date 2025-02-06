@@ -130,7 +130,7 @@ def is_safe_url(target):
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
-@limiter.limit("5 per day")
+#@limiter.limit("5 per day")
 @sst.logout_required
 def signup():
     '''
@@ -159,6 +159,7 @@ def signup():
             print("Invalid email format")
             return redirect(url_for('signup'))
         if not sv.validateName(firstname, lastname):
+            flash('No numbers for first and last name!', 'error')
             print("Invalid name format")
             return redirect(url_for('signup'))
 

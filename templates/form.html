@@ -8,7 +8,7 @@
 
 <div class="container">
   <div class="row">
-    <form action="{{ url_for('form') }}" method="POST" class="box" onsubmit="return validateForm()">
+    <form action="{{ url_for('form') }}" method="POST" class="box" id="createLog">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="col-auto">
         <label for="titleInput" class="form-label">Project</label>
