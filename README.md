@@ -45,7 +45,7 @@ Once deployed, the app can be accessed on either:
 
 ## Screenshots
 ### Login
-![Screenshot_5-2-2025_122935_127 0 0 1](https://github.com/user-attachments/assets/c0d6c315-e46d-49e5-a29d-fa52a181e826)
+![desktop_screenshot (2)](https://github.com/user-attachments/assets/7f1af0c3-96ba-4030-9b91-30b945fc1581)
 
 ### Dashboard
 ![Screenshot_5-2-2025_125731_127 0 0 1](https://github.com/user-attachments/assets/83be37a5-8ebb-4231-9613-9eaad0c5ee50)
