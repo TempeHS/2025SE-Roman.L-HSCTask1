@@ -134,10 +134,10 @@ def signup():
     '''
     Signup page for new users
     '''
+    ALLOWED_URLS = ['/', '/dashboard', '/index.html']
     if request.method == "GET" and request.args.get("url"):
         url = request.args.get("url", "").replace('\\', '/')
-        parsed_url = urlparse(url)
-        if not parsed_url.scheme and not parsed_url.netloc:
+        if url in ALLOWED_URLS:
             return redirect(url, code=302)
         return redirect('/', code=302)
     if request.method == "POST":
@@ -176,10 +176,11 @@ def login():
     '''
     Login page for new users
     '''
+    ALLOWED_URLS = ['/', '/dashboard', '/index.html']
     if request.method == "GET" and request.args.get("url"):
         target = request.args.get('url', '')
         target = target.replace('\\', '')
-        if is_safe_url(target):
+        if target in ALLOWED_URLS:
             return redirect(target, code=302)
         return redirect('/dashboard', code=302)
     if request.method == "POST":
