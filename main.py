@@ -130,7 +130,7 @@ def is_safe_url(target):
 
 
 @app.route("/signup.html", methods=["GET", "POST"])
-#@limiter.limit("5 per day")
+@limiter.limit("5 per day")
 @sst.logout_required
 def signup():
     '''
