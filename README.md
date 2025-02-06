@@ -30,11 +30,7 @@
 3. Gather dependencies
 <pre>pip install -r requirements.txt</pre>
 
-4. Create .env and copy example.env
-<pre>code .env
-secret_key =  b"f53oi3uriq9pifpff;apl" # Paste this in new .env</pre>
-
-5. Deploy live server (port: 5000)
+4. Deploy live server (port: 5000)
 <pre>python main.py</pre>
 
 Once deployed, the app can be accessed on either:
