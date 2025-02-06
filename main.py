@@ -26,8 +26,6 @@ from userManagement import User # User management
 
 load_dotenv()
 
-VALID_REDIRECT = "http://dashboard.html"
-
 app = Flask(__name__)
 init_security(app)
 

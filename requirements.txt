@@ -6,3 +6,4 @@ flask-login
 bcrypt
 APScheduler
 bleach
+python-dotenv
