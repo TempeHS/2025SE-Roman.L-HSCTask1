@@ -17,7 +17,7 @@
 - Secure session handling with Flask
 - Strict input sanitization and validation
 - App logging and alerts for suspicious activities
-- SSL and HTTPS support
+- SSL and HTTPS support (allow self-signed certificates)
 - Dark Mode support
 
 ## Installation
@@ -27,10 +27,14 @@
 2. Check directory
 <pre>cd 2025SE-Roman.L-HSCTask1</pre>
    
-2. Gather dependencies
+3. Gather dependencies
 <pre>pip install -r requirements.txt</pre>
 
-2. Deploy live server (port: 5000)
+4. Create .env and copy example.env
+<pre>code .env
+secret_key =  b"f53oi3uriq9pifpff;apl" # Paste this in new .env</pre>
+
+5. Deploy live server (port: 5000)
 <pre>python main.py</pre>
 
 Once deployed, the app can be accessed on either:
