@@ -1,3 +1,8 @@
+> [!Important]
+>
+> - CSP violations caused by unsupported text editor, can be ignored: https://www.tiny.cloud/docs/tinymce/latest/tinymce-and-csp/
+> - For SSL and HTTPS to work, change SSL context from None to Context and allow self-signed certificates (will show up as unsafe)
+>
 [![Python Version](https://img.shields.io/badge/python-3.12.2-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-3122/)
 # 2025 Developer Log
 **CONTACT FOR ENQUIRIES: roman.lacbungan@education.nsw.gov.au**
